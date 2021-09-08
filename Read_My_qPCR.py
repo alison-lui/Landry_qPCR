@@ -7,30 +7,87 @@ Created on Thu Sep  2 12:53:25 2021
 
 #####################################################
 
+"""
+To Do:
+
+[X] - Remove unecessary printing of data points in loops
+[]  - Add index to data array so that I can handle multiple fluorophores
+    [X] - completed for Plot 1
+    []  - completed for Plot 2
+    []  - completed for Plot 3
+    []  - completed for Plot 4
+    []  - completed for Plot 5
+[]  - Add bar graph for fractions averaged over time
+[]  - Add Y/N options for each type of graph at the beginning parameters
+[]  - Update "Headers" file input to match a standard 96 well plate
+
+"""
+
 
 """ Start by changing the following parameters """
 
-workingdir = r"C:\Users\Darwin\Documents\Alison\AL Data\B2P43_Liposomes_345_Fractions\qPCR Liposomes Overnight"
-fname = r"C:\Users\Darwin\Documents\Alison\AL Data\B2P43_Liposomes_345_Fractions\qPCR Liposomes Overnight\2021-09-01 Liposomes Overnight -  Quantification Amplification Results_FAM.csv"
+wdir    = r"C:\Users\sunsh\Documents\AL Data\B2P51\qPCR"
+fname   = r"C:\Users\sunsh\Documents\AL Data\B2P51\qPCR\20210904_CF-LUV_Overnight_AuNP_last6columns -  Quantification Amplification Results_FAM.csv"
+fname_h = r"C:\Users\sunsh\Documents\AL Data\B2P51\qPCR\20210904_CF-LUV_Overnight_AuNP_last6columns -  Headers.csv"
+
 AverageDatainTriplicates = True
 
-fname_h = r"C:\Users\Darwin\Documents\Alison\AL Data\B2P43_Liposomes_345_Fractions\qPCR Liposomes Overnight\2021-09-01 Liposomes Overnight -  Headers.csv"
 
 t_per_run = 10.133333333 # minutes
 
-#####################################################
+fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
 
+fluor_FAM = True
+fluor_TexasRed = True
+fluor_CalGold = True
+
+#####################################################
 
 import pandas as pd
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 
-os.chdir(workingdir)
+# Colors
+
+def colorFader(c1,c2,mix=0): #fade (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
+    c1=np.array(mpl.colors.to_rgb(c1))
+    c2=np.array(mpl.colors.to_rgb(c2))
+    return mpl.colors.to_hex((1-mix)*c1 + mix*c2)
+
+c_FAM = '#2E8B57' #seafoam green
+c_TxR = '#A40000' #dark red
+c_Cal = '#EDC812' #gold
+c_wht = '#FFFFFF' #white
+
+fluor_colors = [c_FAM, c_TxR, c_Cal]
+
+# Get Data
+
+os.chdir(wdir)
 
 # extract emission data
+base = fname[:-7]
 df = pd.read_csv(fname)
 data = df.to_numpy()
+H,N = np.shape(data)
+
+fluor = [fluor_FAM, fluor_TexasRed, fluor_CalGold]
+N_fluor = sum(1 for x in fluor if x == True)
+# remove any unused fluorophores in name list
+fluor_index = []
+for x in range(0,len(fluor)):
+    if fluor[x] == True:
+        fluor_index = np.append(fluor_index, x)
+
+# put fluorophore data into empty emission data array
+data = np.empty((H,N,N_fluor))
+for x in range(0,N_fluor):
+    i = int(fluor_index[x])
+    temp = pd.read_csv(base + fluor_name[i] + ".csv")
+    temp = temp.to_numpy()
+    data[:,:,x] = temp
 
 # extract header data
 dfh = pd.read_csv(fname_h)
@@ -38,51 +95,67 @@ headers = dfh.to_numpy()
 headers = headers[0]
 
 # X data (cycle no.) sits in 2nd column
-cycle = data[:,1] - 1 # minus one because cycle starts at 1 whereas time starts at 0
+cycle = data[:,1,:] - 1 # minus one because cycle starts at 1 whereas time starts at 0
+cycle = cycle[:,0]
 Time = cycle * t_per_run
 
-# FAM Emission data sits in 3rd and later columns
-data = data[:,2:]
-H,N = np.shape(data)
+# Emission data sits in 3rd and later columns
+data = data[:,2:,:]
+H,N,N_fluor = np.shape(data)
 
-# average in triplicates
-t = int(N/3)
-# data goes here
-em_avgs = []
-em_std = []
-header_avgs = []
+if AverageDatainTriplicates == True:
+    # average in triplicates
+    t = int(N/3)
+    # data goes here
+    temp_avg = np.empty((H,t,N_fluor))
+    temp_std = np.empty((H,t,N_fluor))
+    temp_hdr = [] # append strings to an empty array rather than pre-generate an empty array
+ 
+    for i in fluor_index:
+        i = int(i)
+        for x in range(0,t):
+            r = int(x*3)
+            temp_avg[:,x,i] = np.mean(data[:,r:r+3,i],1)
+            temp_std[:,x,i] = np.std( data[:,r:r+3,i],1)
+            temp_hdr = np.append(temp_hdr, headers[r]) # only take the header from the first of the triplicates
+    
+    # rename variables 
+    data = temp_avg
+    stdev = temp_std
+    headers = temp_hdr
+    
+#####################################################
 
-for x in range(0,t):
-    r = int(x*3)
-    em_avgs = np.append(em_avgs, np.mean(data[:,r:r+3],1)).reshape((x+1,H))
-    em_std = np.append(em_std, np.std(data[:,r:r+3],1)).reshape((x+1,H))
-    header_avgs = np.append(header_avgs, headers[r])
+# PLOT 1
+
+# plot all data (with error bars if averaged)
+
+for i in range(0,len(fluor)):
+    if fluor[i] == True: # for each fluorophore, make a different plot
+    
+        # start figure for this fluorophore
+        fig, ax = plt.subplots(1, 1)
+        
+        # define color gradient. Every individual experiment gets a color in the gradient
+        colors = [colorFader(fluor_colors[i], c_wht, x/t) for x in range(0,t)]
+    
+        for x in range(0,t):
+            if AverageDatainTriplicates == True:
+                ax.errorbar(Time, data[:,x,i], stdev[:,x,i], color=colors[x], label=headers[x])
+            else:
+                ax.plot(Time, data[:,x,i], color=colors[x], label=headers[x])
+        
+        # set other parameters
+        ax.set_ylabel('RFU Emission')
+        ax.set_xlabel('Time (minutes)')
+        ax.set_title(fluor_name[i])
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        plt.tight_layout()
+
 
 #####################################################
 
-# plot averaged data with error bars
-
-fig1, ax1 = plt.subplots(1, 1)  
-  
-for x in range(0,t):
-    evenly_spaced_interval = np.linspace(0, 1, t)
-    colors = [plt.cm.viridis(x) for x in evenly_spaced_interval]
-    
-    ax1.errorbar(Time, em_avgs[x,:], em_std[x,:], color=colors[x], label = header_avgs[x])
-    
-    print(x)
-    
-#plt.ylim((7000, 8000))
-
-ax1.set_ylabel('FAM Emission')
-ax1.set_xlabel('Time (minutes)')
-ax1.set_title("qPCR CF-LUV's")
-ax1.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-plt.tight_layout()
-#    fig.savefig("Cumulative" + ender + ".png")
-
-
-#####################################################
+# PLOT 2
 
 # plot each of the 5 sample types in a stacked subplot
 
@@ -98,11 +171,9 @@ for x in range(0,tt):
     
     for i in range(0,3):
         
-        
         dstyle = ['-', '--', ':'] # line styles: solid, dashed, dotted
         leg = ["0.0%", "0.1%", "0.2%"]        
         index = x*3 + i
-        print("index =" + str(index))
         
         axs[x].errorbar(Time, em_avgs[index,:], em_std[index,:], color=colors[x], linestyle=dstyle[i], label = leg[i])
         axs[x].set_ylabel('FAM Emission')
@@ -119,6 +190,8 @@ plt.tight_layout()
 
 
 #####################################################
+
+# PLOT 3
 
 # normalize each set of frac 4, 5, 6 data to the 0.2% endpoint at cycle 70
 
@@ -146,7 +219,10 @@ em_norm_std = fraction_std / endpoints[:,None]
 
 #####################################################
 
+# PLOT 4
+
 # plot each of the 3 now normalized samples in a stacked subplot
+
 fig, axs = plt.subplots(3)
 fig.set_size_inches(8, 7)
 
@@ -161,8 +237,7 @@ for x in range(0,L):
         dstyle = ['-', '--', ':'] # line styles: solid, dashed, dotted
         leg = ["0.0%", "0.1%", "0.2%"]        
         index = x*3 + i
-        print("index =" + str(index))
-        
+
         axs[x].errorbar(Time, em_norm[index,:], em_norm_std[index,:], color=colors[c2], linestyle=dstyle[i], label = leg[i])
         axs[x].set_ylabel('FAM Emission')
         axs[x].set_xlabel('Time (minutes)')
@@ -178,6 +253,8 @@ plt.tight_layout()
 
 
 #####################################################
+
+# PLOT 5
 
 # Plot normalized fractions on one graph
 
@@ -196,7 +273,6 @@ for x in range(0,L):
         dstyle = ['-', '--', ':'] # line styles: solid, dashed, dotted
         leg = ["0.0%", "0.1%", "0.2%"]        
         index = x*3 + i
-        print("index =" + str(index))
         
         axs.errorbar(Time, em_norm[index,:], em_norm_std[index,:], color=colors[c2], linestyle=dstyle[i], label = header_avgs[i])
         axs.set_ylabel('FAM Emission')
