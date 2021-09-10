@@ -13,25 +13,30 @@ To Do:
 [X] - Remove unecessary printing of data points in loops
 []  - Add index to data array so that I can handle multiple fluorophores
     [X] - completed for Plot 1
-    []  - completed for Plot 2
+    [X] - completed for Plot 2
     []  - completed for Plot 3
     []  - completed for Plot 4
     []  - completed for Plot 5
 []  - Add bar graph for fractions averaged over time
 []  - Add Y/N options for each type of graph at the beginning parameters
 []  - Update "Headers" file input to match a standard 96 well plate
+[]  - Extract Headers and legends directly from headers file (needs a consistent delimiter)
 
 """
 
 
 """ Start by changing the following parameters """
 
-wdir    = r"C:\Users\sunsh\Documents\AL Data\B2P51\qPCR"
-fname   = r"C:\Users\sunsh\Documents\AL Data\B2P51\qPCR\20210904_CF-LUV_Overnight_AuNP_last6columns -  Quantification Amplification Results_FAM.csv"
-fname_h = r"C:\Users\sunsh\Documents\AL Data\B2P51\qPCR\20210904_CF-LUV_Overnight_AuNP_last6columns -  Headers.csv"
+wdir    = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR"
+fname   = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR\20210904_CF-LUV_Overnight_AuNP_last6columns -  Quantification Amplification Results_FAM.csv"
+
+fname_h = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR\20210904_CF-LUV_Overnight_AuNP_last6columns -  Headers.csv"
+SampleHeaders = ['20mM HEPES', '2.5uM CF', "CF-LUV's"]
+
 
 AverageDatainTriplicates = True
 
+N_SampleTypes = 3 # number of different rows (20mM HEPES, 2.5 uM CF, Fraction 1, etc.)
 
 t_per_run = 10.133333333 # minutes
 
@@ -60,6 +65,7 @@ c_FAM = '#2E8B57' #seafoam green
 c_TxR = '#A40000' #dark red
 c_Cal = '#EDC812' #gold
 c_wht = '#FFFFFF' #white
+c_blk = '#000000' #black
 
 fluor_colors = [c_FAM, c_TxR, c_Cal]
 
@@ -137,7 +143,8 @@ for i in range(0,len(fluor)):
         fig, ax = plt.subplots(1, 1)
         
         # define color gradient. Every individual experiment gets a color in the gradient
-        colors = [colorFader(fluor_colors[i], c_wht, x/t) for x in range(0,t)]
+        colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, t)]
+        #colors = [colorFader(fluor_colors[i], c_wht, x/t) for x in range(0,t)]
     
         for x in range(0,t):
             if AverageDatainTriplicates == True:
@@ -157,56 +164,85 @@ for i in range(0,len(fluor)):
 
 # PLOT 2
 
-# plot each of the 5 sample types in a stacked subplot
+# plot each of the 3 sample types in a stacked subplot
 
-fig, axs = plt.subplots(5)
-fig.set_size_inches(8, 12)
+# i is figure index (one figure for each fluorophore)
+# n is subfigure index (one for each type of sample (HEPES control, CF control, each fraction sample, etc.))
+# x is the sub-subfigure index. Within each sample type, how many variations are there (HEPES, 0.1% Triton, 2uL AuNP, 4 uL AuNP, etc.)
 
-tt = int(t/3)
+dstyle = ['-', '--', ':', '-.'] # line styles: solid, dashed, dotted, dash-dotted
+leg = ["Control", "0.5% Triton", "2 uL AuNP", "4 uL AuNP"]       
+X = int(t/N_SampleTypes)
 
-for x in range(0,tt):
-    
-    evenly_spaced_interval = np.linspace(0, 1, tt)
-    colors = [plt.cm.viridis(x) for x in evenly_spaced_interval]
-    
-    for i in range(0,3):
-        
-        dstyle = ['-', '--', ':'] # line styles: solid, dashed, dotted
-        leg = ["0.0%", "0.1%", "0.2%"]        
-        index = x*3 + i
-        
-        axs[x].errorbar(Time, em_avgs[index,:], em_std[index,:], color=colors[x], linestyle=dstyle[i], label = leg[i])
-        axs[x].set_ylabel('FAM Emission')
-        axs[x].set_xlabel('Time (minutes)')
-        axs[x].set_xlim(0,250)
-        
-        temptitle = header_avgs[index]
-        subplot_title = temptitle[:-7]
-        
-        axs[x].set_title(subplot_title)
-        axs[x].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+for i in range(0,len(fluor)): # for each figure
+    if fluor[i] == True: # for each fluorophore, make a different plot
 
-plt.tight_layout()
+        # start figure for this fluorophore
+        fig, axs = plt.subplots(N_SampleTypes, 1)
+        fig.set_size_inches(8, 4*N_SampleTypes)
+
+        # define color gradient. Every individual experiment gets a color in the gradient
+        #colors = [colorFader(fluor_colors[i], c_blk, x/t) for x in range(0,X)]
+        colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, X)]
+
+        for n in range(0,N_SampleTypes): # for each subfigure
+        
+            print("n = ",str(n))
+            
+            for x in range(0,X): # for each line in each subfigure
+            
+                print("x = ",str(x))
+            
+                t_index = int(n*X + x)     
+                
+                print("t_index = ",str(t_index))
+                
+                if AverageDatainTriplicates == True:                    
+                    axs[n].errorbar(Time, data[:,t_index,i], stdev[:,t_index,i], color=colors[x], linestyle=dstyle[x], label = leg[x])
+                else:
+                    axs[n].plot(Time, data[:,t_index,i], color=colors[x], linestyle=dstyle[x], label = leg[x])
+                
+            axs[n].set_ylabel('RFU')
+            axs[n].set_xlabel('Time (minutes)')
+            
+            axs[n].set_title(SampleHeaders[n])
+            axs[n].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+            
+        fig.suptitle(fluor_name[int(fluor_index[i])], fontsize = 36)
+        plt.tight_layout()
 
 
 #####################################################
 
 # PLOT 3
 
-# normalize each set of frac 4, 5, 6 data to the 0.2% endpoint at cycle 70
+# normalize each set of fraction data to the Triton average at last timepoint
 
 # find the correct endpoints
-e_index = [8,11,14]
-endpoints = []
-headers_norm = []
-for i in e_index:
-    endpoints = np.append(endpoints,em_avgs[i,-1])
+if AverageDatainTriplicates == True:
+    e_index = [(i+2) * t for i in range(0,N_SampleTypes - 2)]
+else:
+    e_index = [i * X + 2 * X for i in range(0,N_SampleTypes - 2)]
+
+endpoints = np.empty((len(e_index), len(fluor)))
+headers_norm = np.empty(len(e_index))
+
+for i in range(0,len(e_index)):
+    endpoints[i,:] = np.append(endpoints,data[i,-1,:])
     headers_norm = np.append(headers_norm,headers[i])
 
+# now turn the endpoints list match the size and shape of the data list (X*sample number)
 temp = endpoints
-endpoints = []
-for i in temp:
-    endpoints = np.append(endpoints,[i,i,i])
+endpoints = np.empty((X * N_SampleTypes, len(fluor)))
+
+for i in temp: # for each fluorophore
+    
+    r = []
+    
+    for x in range(0,X):
+        r = np.append(r,temp[i])
+
+    endpoints = np.append(endpoints,r)
 
 # section out just the emission data (not the control data sets)
 fraction_avgs = em_avgs[-9:]
