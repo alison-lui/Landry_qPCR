@@ -17,7 +17,7 @@ To Do:
     []  - completed for Plot 3
     []  - completed for Plot 4
     []  - completed for Plot 5
-[]  - Add bar graph for fractions averaged over time
+[X] - Add bar graph for fractions averaged over time
 []  - Add Y/N options for each type of graph at the beginning parameters
 []  - Update "Headers" file input to match a standard 96 well plate
 []  - Extract Headers and legends directly from headers file (needs a consistent delimiter)
@@ -27,10 +27,11 @@ To Do:
 
 """ Start by changing the following parameters """
 
-wdir    = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR"
-fname   = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR\20210904_CF-LUV_Overnight_AuNP_last6columns -  Quantification Amplification Results_FAM.csv"
+wdir    = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR - 20210910"
+fname   = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR - 20210910\20210910-CF-LUV_AuNP_GT15SWNT -  Quantification Amplification Results_FAM.csv"
 
-fname_h = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR\20210904_CF-LUV_Overnight_AuNP_last6columns -  Headers.csv"
+fname_h = r"C:\Users\Alison\Documents\AL Data\B2P51\qPCR - 20210910\20210910-CF-LUV_AuNP_GT15SWNT -  Headers.csv"
+
 SampleHeaders = ['20mM HEPES', '2.5uM CF', "CF-LUV's"]
 
 
@@ -43,8 +44,8 @@ t_per_run = 10.133333333 # minutes
 fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
 
 fluor_FAM = True
-fluor_TexasRed = True
-fluor_CalGold = True
+fluor_TexasRed = False
+fluor_CalGold = False
 
 #####################################################
 
@@ -108,6 +109,7 @@ Time = cycle * t_per_run
 # Emission data sits in 3rd and later columns
 data = data[:,2:,:]
 H,N,N_fluor = np.shape(data)
+t = N
 
 if AverageDatainTriplicates == True:
     # average in triplicates
@@ -198,7 +200,7 @@ for i in range(0,len(fluor)): # for each figure
                 print("t_index = ",str(t_index))
                 
                 if AverageDatainTriplicates == True:                    
-                    axs[n].errorbar(Time, data[:,t_index,i], stdev[:,t_index,i], color=colors[x], linestyle=dstyle[x], label = leg[x])
+                    axs[n].errorbar(Time, data[:,t_index,i], stdev[:,t_index,i], color=colors[x], linestyle=dstyle[t_index], label = leg[x])
                 else:
                     axs[n].plot(Time, data[:,t_index,i], color=colors[x], linestyle=dstyle[x], label = leg[x])
                 
@@ -322,3 +324,24 @@ plt.tight_layout()
 
 
 
+###################################################
+
+# PLOT 6
+
+# Bar graph!
+
+# average data along all time points
+
+bar_data = np.average(data, axis=0)
+
+fig, ax = plt.subplots(1)
+fig.set_size_inches(8, 4)
+
+X = np.arange(t)
+
+for i in fluor_index:
+    i = int(i)
+    ax.bar(X + i/4, bar_data[:,i], color = fluor_colors[i], width = 0.25, label = fluor_name[i])
+           
+plt.xticks(X, headers, rotation=90)
+ax.legend()
