@@ -7,14 +7,32 @@ Created on Thu Sep  2 12:53:25 2021
 
 #####################################################
 
+"""
+To Do:
+
+[X] - Remove unecessary printing of data points in loops
+[]  - Add index to data array so that I can handle multiple fluorophores
+    [X] - completed for Plot 1
+    [X] - completed for Plot 2
+    []  - completed for Plot 3
+    []  - completed for Plot 4
+    []  - completed for Plot 5
+[X] - Add bar graph for fractions averaged over time
+[]  - Add Y/N options for each type of graph at the beginning parameters
+[]  - Update "Headers" file input to match a standard 96 well plate
+[]  - Extract Headers and legends directly from headers file (needs a consistent delimiter)
+
+"""
+
 
 """ Start by changing the following parameters """
 
-workingdir = r"C:\Users\Darwin\Documents\Alison\AL Data\B2P43_Liposomes_345_Fractions\qPCR Liposomes Overnight"
-fname = r"C:\Users\Darwin\Documents\Alison\AL Data\B2P43_Liposomes_345_Fractions\qPCR Liposomes Overnight\2021-09-01 Liposomes Overnight -  Quantification Amplification Results_FAM.csv"
-AverageDatainTriplicates = True
+wdir    = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR"
+fname   = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2012-09-14 CF-GUV Overnight -  Quantification Amplification Results_FAM.csv"
 
-fname_h = r"C:\Users\Darwin\Documents\Alison\AL Data\B2P43_Liposomes_345_Fractions\qPCR Liposomes Overnight\2021-09-01 Liposomes Overnight -  Headers.csv"
+fname_h = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2012-09-14 CF-GUV Overnight -  Headers.csv"
+
+AverageDatainTriplicates = True
 
 t_per_run = 2 # minutes
 
@@ -26,9 +44,9 @@ fluor_CalGold = False
 
 #####################################################
 
-
 import pandas as pd
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 
@@ -54,6 +72,7 @@ fluor_colors = [c_FAM, c_TxR, c_Cal]
 os.chdir(wdir)
 
 # extract emission data
+base = fname[:-7]
 df = pd.read_csv(fname)
 data = df.to_numpy()
 H,N = np.shape(data)
@@ -81,7 +100,8 @@ headers = dfh.to_numpy()
 headers = headers[0]
 
 # X data (cycle no.) sits in 2nd column
-cycle = data[:,1] - 1 # minus one because cycle starts at 1 whereas time starts at 0
+cycle = data[:,1,:] - 1 # minus one because cycle starts at 1 whereas time starts at 0
+cycle = cycle[:,0]
 Time = cycle * t_per_run
 
 # Emission data sits in 3rd and later columns
@@ -96,24 +116,24 @@ if AverageDatainTriplicates == True:
     temp_avg = np.empty((H,t,N_fluor))
     temp_std = np.empty((H,t,N_fluor))
     temp_hdr = [] # append strings to an empty array rather than pre-generate an empty array
-
+ 
     for i in fluor_index:
         i = int(i)
         for x in range(0,t):
             r = int(x*3)
             temp_avg[:,x,i] = np.mean(data[:,r:r+3,i],1)
             temp_std[:,x,i] = np.std( data[:,r:r+3,i],1)
-
+    
     for x in range(0,t):
         r = int(x*3)
         temp_hdr = np.append(temp_hdr, headers[r]) # only take the header from the first of the triplicates
-
-    # rename variables
+    
+    # rename variables 
     data = temp_avg
     stdev = temp_std
     headers = temp_hdr
-
-
+    
+    
 #####################################################
 
 # Function for making plots
@@ -121,38 +141,38 @@ if AverageDatainTriplicates == True:
 def makeplot(main, adds, fi, FIG, AX):
 
     """
-    This function takes the 'mains', and 'adds' and creates a subplot of any
-    data which matches from the header index. fig and ax are the already made
+    This function takes the 'mains', and 'adds' and creates a subplot of any 
+    data which matches from the header index. fig and ax are the already made 
     fig and axes that we want to put the plot onto
     """
-
+    
     # loop through list of adds
         # for each of adds values, create a mask on the data for [main, adds[i]]
             # plot this one line
-
+   
     h_index = np.arange(0,np.shape(data)[1])
-
+    
     colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(adds))]
-
+    
     for i in np.arange(0,len(adds)):
         ai = adds[i]
         # mask against both main and adds conditions
         mask = (headers[:,0] == main) & (headers[:,1] == ai)
-
+        
         # stop loop if mask is empty
         if sum(mask) == 0:
             break
-
+        
         # extract header_indices to plot from headers[mask][2]
         plot_index = int(headers[mask][0][2])
-
+    
         # plot
         AX.errorbar(Time,data[:,plot_index,fi], stdev[:,plot_index,fi], color=colors[i], label = ai)
-
+    
     AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-
+    
     return
-
+    
 #####################################################
 
 # Header Formatting
@@ -170,8 +190,8 @@ for i in np.arange(0,len(headers)):
 temp = []
 for i in np.arange(0,len(headers)):
     temp = np.append(temp, headers[i])
-    temp = np.append(temp, header_index[i])
-temp = np.reshape(temp, (len(header_index),3))
+    temp = np.append(temp, header_index[i])   
+temp = np.reshape(temp, (len(header_index),3))  
 
 # remove any headers that say 'blank'
 #for i in reversed(np.arange(0,len(headers))):
@@ -185,11 +205,6 @@ headers = temp
 headers_main = list(set(headers[:,0]))
 headers_adds = list(set(headers[:,1]))
 
-for x in range(0,t):
-    r = int(x*3)
-    em_avgs = np.append(em_avgs, np.mean(data[:,r:r+3],1)).reshape((x+1,H))
-    em_std = np.append(em_std, np.std(data[:,r:r+3],1)).reshape((x+1,H))
-    header_avgs = np.append(header_avgs, headers[r])
 
 #####################################################
 
@@ -201,30 +216,30 @@ for x in range(0,t):
 
 header_check = 'n'
 while header_check == 'n':
-
+    
     print("Main Headers are :")
     print(headers_main)
-
+    
     header_check = input("Would you like to keep this order? [y/n]: ")
     if header_check == 'y':
         break
-
+    
     print("This is the current order:")
-
+        
     for i in np.arange(0,len(headers_main)):
         print(str(i) + ": " + headers_main[i])
 
-    # give me the new order
+    # give me the new order        
     neworder = input("List the new order in the format of [3,0,2,1] with brackets, commas, and no spaces: ")
 
-    # create a new order
+    # create a new order    
     index = neworder[1:-1].split(",")
     new_headers = []
     for i in index:
         i = int(i)
         new_headers = np.append(new_headers, headers_main[int(i)])
         new_headers = list(new_headers)
-
+    
     #check the new order
     print("Just to check, this is the new order you wanted?")
     for i in np.arange(0,len(new_headers)):
@@ -239,31 +254,31 @@ print("Ok, thanks!")
 
 adds_check = 'n'
 while adds_check == 'n':
-
+    
     print("Main Adds are :")
     print(headers_adds)
-
+    
     adds_check = input("Would you like to keep this order? [y/n]: ")
     if adds_check == 'y':
         break
-
+    
     # this only continues if answer is not 'y'
     print("This is the current order:")
-
+        
     for i in np.arange(0,len(headers_adds)):
         print(str(i) + ": " + headers_adds[i])
 
-    # give me the new order
+    # give me the new order        
     neworder = input("List the new order in the format of [0,3,1,2] with brackets, commas, and no spaces: ")
 
-    # create a new order
+    # create a new order    
     index = neworder[1:-1].split(",")
     new_adds = []
     for i in index:
         i = int(i)
         new_adds = np.append(new_adds, headers_adds[int(i)])
         new_adds = list(new_adds)
-
+    
     #check the new order
     print("Just to check, this is the new order you wanted?")
     for i in np.arange(0,len(new_adds)):
@@ -284,7 +299,7 @@ headers_adds = new_adds
 
 for i in fluor_index:
     i = int(i)
-
+    
     H_len = len(headers_main)
 
     # start plots with one subplot for each header category
@@ -295,20 +310,20 @@ for i in fluor_index:
     fig.set_size_inches(8, 4*H_len)
 
     for m in np.arange(0,len(headers_main)): # for each subplot
-        hm = headers_main[m]
-
+        hm = headers_main[m]    
+        
         if H_len > 1:
             AX = axs[m]
         else:
             AX = axs
-
-        makeplot(hm, headers_adds, i, fig, AX)
+            
+        makeplot(hm, headers_adds, i, fig, AX)    
         AX.set_title(hm)
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
-
+    
     fig.suptitle(fluor_name[int(fluor_index[i])], fontsize = 36)
-
+    
     plt.tight_layout()
 
 #####################################################
@@ -319,27 +334,27 @@ for i in fluor_index:
 # each subplot is a different fluorophore
 
 for m in np.arange(0,len(headers_main)): # for each figure
-
-    HM = headers_main[m]
+    
+    HM = headers_main[m]    
     F_len = len(fluor_index)
     # start plots with one subplot for each fluorophore
     fig, axs = plt.subplots(F_len)
     fig.set_size_inches(8*F_len, 4)
-
+    
     for i in fluor_index:
         i = int(i)
-
+        
         if F_len > 1:
             AX = axs[i]
         else:
             AX = axs
-
+            
         makeplot(HM, headers_adds, i, fig, AX)
         AX.set_title(fluor_name[i])
-
+        
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
-
+        
     fig.suptitle(HM, fontsize = 36)
     plt.tight_layout()
 
@@ -352,17 +367,30 @@ for m in np.arange(0,len(headers_main)): # for each figure
 # normalize each set of fraction data to the Triton average at last timepoint
 
 # find the correct endpoints
-e_index = [8,11,14]
-endpoints = []
-headers_norm = []
-for i in e_index:
-    endpoints = np.append(endpoints,em_avgs[i,-1])
+if AverageDatainTriplicates == True:
+    e_index = [(i+2) * t for i in range(0,N_SampleTypes - 2)]
+else:
+    e_index = [i * X + 2 * X for i in range(0,N_SampleTypes - 2)]
+
+endpoints = np.empty((len(e_index), len(fluor)))
+headers_norm = np.empty(len(e_index))
+
+for i in range(0,len(e_index)):
+    endpoints[i,:] = np.append(endpoints,data[i,-1,:])
     headers_norm = np.append(headers_norm,headers[i])
 
+# now turn the endpoints list match the size and shape of the data list (X*sample number)
 temp = endpoints
-endpoints = []
-for i in temp:
-    endpoints = np.append(endpoints,[i,i,i])
+endpoints = np.empty((X * N_SampleTypes, len(fluor)))
+
+for i in temp: # for each fluorophore
+    
+    r = []
+    
+    for x in range(0,X):
+        r = np.append(r,temp[i])
+
+    endpoints = np.append(endpoints,r)
 
 # section out just the emission data (not the control data sets)
 fraction_avgs = em_avgs[-9:]
@@ -375,31 +403,33 @@ em_norm_std = fraction_std / endpoints[:,None]
 
 #####################################################
 
+# PLOT 4
+
 # plot each of the 3 now normalized samples in a stacked subplot
+
 fig, axs = plt.subplots(3)
 fig.set_size_inches(8, 7)
 
 L = 3
 
 for x in range(0,L):
-
+    
     for i in range(0,3):
-
+        
         c2 = x+2 # to keep the fraction colors and subplot titles the same, use c2 instead of i
-
+        
         dstyle = ['-', '--', ':'] # line styles: solid, dashed, dotted
-        leg = ["0.0%", "0.1%", "0.2%"]
+        leg = ["0.0%", "0.1%", "0.2%"]        
         index = x*3 + i
-        print("index =" + str(index))
 
         axs[x].errorbar(Time, em_norm[index,:], em_norm_std[index,:], color=colors[c2], linestyle=dstyle[i], label = leg[i])
         axs[x].set_ylabel('FAM Emission')
         axs[x].set_xlabel('Time (minutes)')
         axs[x].set_xlim(0,250)
-
+        
         temptitle = header_avgs[e_index[x]]
         subplot_title = temptitle[:-7] + " - Normalized"
-
+        
         axs[x].set_title(subplot_title)
         axs[x].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
 
@@ -407,6 +437,8 @@ plt.tight_layout()
 
 
 #####################################################
+
+# PLOT 5
 
 # Plot normalized fractions on one graph
 
@@ -417,23 +449,22 @@ fig.set_size_inches(8, 4)
 L = 3
 
 for x in range(0,L):
-
+    
     for i in range(0,3):
-
+        
         c2 = x+2 # to keep the fraction colors and subplot titles the same, use c2 instead of i
-
+        
         dstyle = ['-', '--', ':'] # line styles: solid, dashed, dotted
-        leg = ["0.0%", "0.1%", "0.2%"]
+        leg = ["0.0%", "0.1%", "0.2%"]        
         index = x*3 + i
-        print("index =" + str(index))
-
+        
         axs.errorbar(Time, em_norm[index,:], em_norm_std[index,:], color=colors[c2], linestyle=dstyle[i], label = header_avgs[i])
         axs.set_ylabel('FAM Emission')
         axs.set_xlabel('Time (minutes)')
         axs.set_xlim(0,250)
-
-
-axs.set_title('Fractions 4, 5, 6 - Normalized')
+        
+        
+axs.set_title('Fractions 4, 5, 6 - Normalized')        
 axs.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
 plt.tight_layout()
 
@@ -457,6 +488,6 @@ X = np.arange(t)
 for i in fluor_index:
     i = int(i)
     ax.bar(X + i/4, bar_data[:,i], color = fluor_colors[i], width = 0.25, label = fluor_name[i])
-
+           
 plt.xticks(X, headers, rotation=90)
 ax.legend()
