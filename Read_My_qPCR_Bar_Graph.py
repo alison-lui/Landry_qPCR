@@ -33,15 +33,6 @@ fluor_FAM = True
 fluor_TexasRed = True
 fluor_CalGold = False
 
-
-
-wdirs =  [wdir1,  wdir2,  wdir3]
-fnames = [fname1, fname2, fname3]
-
-fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
-
-
-
 #######################################
 
 import pandas as pd
@@ -108,12 +99,17 @@ def extractdata(wdir, fname, fluor_index):
     
 #####################################################
 
+# organize input data
+wdirs =  [wdir1,  wdir2,  wdir3]
+fnames = [fname1, fname2, fname3]
+
 # extract header data
 dfh = pd.read_csv(fname_h)
 headers = dfh.to_numpy()
 headers = headers[0]
 
 # list fluorophores
+fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
 fluor = [fluor_FAM, fluor_TexasRed, fluor_CalGold]
 N_fluor = sum(1 for x in fluor if x == True)
 # remove any unused fluorophores in name list
