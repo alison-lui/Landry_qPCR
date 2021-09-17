@@ -476,6 +476,9 @@ plt.tight_layout()
 
 # Bar graph!
 
+# get plot title from filename
+title = os.path.basename(base)
+
 # average data along all time points
 
 bar_data = np.average(data, axis=0)
@@ -490,4 +493,5 @@ for i in fluor_index:
     ax.bar(X + i/4, bar_data[:,i], color = fluor_colors[i], width = 0.25, label = fluor_name[i])
            
 plt.xticks(X, headers, rotation=90)
+plt.set_title(title)
 ax.legend()
