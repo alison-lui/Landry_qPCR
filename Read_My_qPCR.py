@@ -39,7 +39,7 @@ t_per_run = 2 # minutes
 fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
 
 fluor_FAM = True
-fluor_TexasRed = True
+fluor_TexasRed = False
 fluor_CalGold = False
 
 #####################################################
@@ -302,16 +302,28 @@ for i in fluor_index:
     
     H_len = len(headers_main)
 
-    # start plots with one subplot for each header category    
-    fig, axs = plt.subplots(H_len,1)
+    # start plots with one subplot for each header category
+    if H_len > 1:
+        fig, axs = plt.subplots(H_len, 1)
+    else:
+        fig, axs = plt.subplots()
     fig.set_size_inches(8, 4*H_len)
 
     for m in np.arange(0,len(headers_main)): # for each subplot
         hm = headers_main[m]    
-        makeplot(hm, headers_adds, i, fig, axs[m])
-        axs[m].set_title(hm)
         
+        if H_len > 1:
+            AX = axs[m]
+        else:
+            AX = axs
+            
+        makeplot(hm, headers_adds, i, fig, AX)    
+        AX.set_title(hm)
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+    
     fig.suptitle(fluor_name[int(fluor_index[i])], fontsize = 36)
+    
     plt.tight_layout()
 
 #####################################################
@@ -326,13 +338,22 @@ for m in np.arange(0,len(headers_main)): # for each figure
     HM = headers_main[m]    
     F_len = len(fluor_index)
     # start plots with one subplot for each fluorophore
-    fig, axs = plt.subplots(1, F_len)
+    fig, axs = plt.subplots(F_len)
     fig.set_size_inches(8*F_len, 4)
     
     for i in fluor_index:
         i = int(i)
-        makeplot(HM, headers_adds, i, fig, axs[i])
-        axs[i].set_title(fluor_name[i])
+        
+        if F_len > 1:
+            AX = axs[i]
+        else:
+            AX = axs
+            
+        makeplot(HM, headers_adds, i, fig, AX)
+        AX.set_title(fluor_name[i])
+        
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
         
     fig.suptitle(HM, fontsize = 36)
     plt.tight_layout()
