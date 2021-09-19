@@ -18,16 +18,16 @@ qPCR timecourse of each well, and plots the following:
 
 """
 
-wdir1  = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR"
-fname1 = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2021-09-14 CF-LUV Composite -  Quantification Amplification Results_FAM.csv"
+# Header Filename
+fname_h = r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR\2012-09-19 CF-GUV post SEC 1 -  Headers.csv"
 
-wdir2  = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR"
-fname2 = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2021-09-15 CF-LUV from 2021-09-14 -  Quantification Amplification Results_FAM.csv"
+# Data filenames
+fnames = [r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR\2012-09-19 CF-GUV post SEC 2 -  Quantification Amplification Results_FAM.csv"
+          ]
 
-wdir3  = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR"
-fname3 = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2021-09-16 CF-LUV from 2021-09-14 -  Quantification Amplification Results_FAM.csv"
- 
-fname_h = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2021-09-15 CF-LUV from 2021-09-14 -  Headers.csv"
+# Data working directories
+wdirs =  [r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR"]
+
 
 fluor_FAM = True
 fluor_TexasRed = True
@@ -100,8 +100,6 @@ def extractdata(wdir, fname, fluor_index):
 #####################################################
 
 # organize input data
-wdirs =  [wdir1,  wdir2,  wdir3]
-fnames = [fname1, fname2, fname3]
 
 # extract header data
 dfh = pd.read_csv(fname_h)
@@ -119,7 +117,7 @@ for x in range(0,len(fluor)):
         fluor_index = np.append(fluor_index, x)
 
 # pull out the first file name's data
-H, N, N_fluor, data, title = extractdata(wdir1, fname1, fluor_index)
+H, N, N_fluor, data, title = extractdata(wdirs[0], fnames[0], fluor_index)
 
 # create empty array for emission and legend data
 composite = np.zeros((H,N,N_fluor,len(fnames)))
@@ -164,6 +162,25 @@ for i in fluor_index:
     AX.legend() 
            
 plt.tight_layout()
+
+###############################################
+
+# If only one data set given, plot two fluorophores side by side on bar graph
+
+if len(fnames) == 1:
+    
+    fig, axs = plt.subplots()
+    for f in fluor_index:
+        f = int(f)
+        axs.bar(X + f*0.25, bar_composite[:,f,0], color = fluor_colors[f], width = 0.25, label = fluor_name[f])
+
+    axs.set_xticks(X + 1/(len(fnames)+1)) 
+    axs.set_xticklabels(headers, rotation=90)
+    
+    axs.set_title(leg_label[0])
+    axs.legend() 
+           
+    plt.tight_layout()
 
 
 ###############################################
