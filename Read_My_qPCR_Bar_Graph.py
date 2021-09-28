@@ -19,11 +19,10 @@ qPCR timecourse of each well, and plots the following:
 """
 
 # Header Filename
-fname_h = r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR\2012-09-19 CF-GUV post SEC 1 -  Headers.csv"
+fname_h = r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR\2021-09-22 CF-LUV from 2019-09-14 and 2019-09-19 -  Headers.csv"
 
 # Data filenames
-fnames = [r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR\2012-09-19 CF-GUV post SEC 2 -  Quantification Amplification Results_FAM.csv"
-          ]
+fnames = [r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR\2021-09-22 CF-LUV from 2019-09-14 and 2019-09-19 -  Quantification Amplification Results_FAM.csv"]
 
 # Data working directories
 wdirs =  [r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR"]
@@ -38,11 +37,23 @@ fluor_CalGold = False
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
+mpl.rcParams['text.usetex'] = True
 import matplotlib.pyplot as plt
 import os
 import sys
  
-#######################################   
+#######################################  
+
+# use LaTeX fonts in the plot
+plt.rcParams.update({
+    "text.usetex": True,
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Helvetica"]})
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+#######################################  
 
 # Colors
 
@@ -129,7 +140,8 @@ for i in np.arange(0,len(fnames)):
     leg_label = np.append(leg_label, templabel)
     
 #####################################################
-    
+#%% FIGURE 1
+
 # Create bar graph with one subplot for each fluorophore
 
 # average data along all time points
@@ -164,6 +176,7 @@ for i in fluor_index:
 plt.tight_layout()
 
 ###############################################
+#%% FIGURE 2
 
 # If only one data set given, plot two fluorophores side by side on bar graph
 
@@ -184,6 +197,8 @@ if len(fnames) == 1:
 
 
 ###############################################
+#%% FIGURE 3
+
 
 if N_fluor == 1:
     sys.exit()
@@ -222,7 +237,7 @@ ax.set_ylabel('FAM / Texas Red Fluorescence')
 
 plt.tight_layout()
 
-    
+        
     
     
     
