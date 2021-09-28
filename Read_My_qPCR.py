@@ -27,10 +27,10 @@ To Do:
 
 """ Start by changing the following parameters """
 
-wdir    = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR"
-fname   = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2012-09-14 CF-GUV Overnight -  Quantification Amplification Results_FAM.csv"
+wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P76\qPCR"
+fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P76\qPCR\2012-09-23 CF-LUV Overnight -  Quantification Amplification Results_FAM.csv"
 
-fname_h = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2012-09-14 CF-GUV Overnight -  Headers.csv"
+fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P76\qPCR\2012-09-23 CF-LUV Overnight -  Headers.csv"
 
 AverageDatainTriplicates = True
 
@@ -39,7 +39,7 @@ t_per_run = 2 # minutes
 fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
 
 fluor_FAM = True
-fluor_TexasRed = False
+fluor_TexasRed = True
 fluor_CalGold = False
 
 #####################################################
@@ -339,7 +339,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
     F_len = len(fluor_index)
     # start plots with one subplot for each fluorophore
     fig, axs = plt.subplots(F_len)
-    fig.set_size_inches(8*F_len, 4)
+    fig.set_size_inches(4*F_len, 8)
     
     for i in fluor_index:
         i = int(i)
@@ -355,7 +355,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
         
-    fig.suptitle(HM, fontsize = 36)
+    fig.suptitle(HM, fontsize = 24)
     plt.tight_layout()
 
 #####################################################
