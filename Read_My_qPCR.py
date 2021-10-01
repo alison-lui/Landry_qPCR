@@ -27,19 +27,19 @@ To Do:
 
 """ Start by changing the following parameters """
 
-wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P76\qPCR"
-fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P76\qPCR\2012-09-23 CF-LUV Overnight -  Quantification Amplification Results_FAM.csv"
+wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR"
+fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
 
-fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P76\qPCR\2012-09-23 CF-LUV Overnight -  Headers.csv"
+fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Headers.csv"
 
 AverageDatainTriplicates = True
 
-t_per_run = 2 # minutes
+t_per_run = 1 # minutes
 
 fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
 
 fluor_FAM = True
-fluor_TexasRed = True
+fluor_TexasRed = False
 fluor_CalGold = False
 
 #####################################################
@@ -212,6 +212,9 @@ headers_adds = list(set(headers[:,1]))
 
 # Set numbering of headers_main and headers_adds
 
+# Start by sorting headers_main and headers_adds lists
+headers_main.sort()
+headers_adds.sort()
 
 
 header_check = 'n'
@@ -340,6 +343,8 @@ for m in np.arange(0,len(headers_main)): # for each figure
     # start plots with one subplot for each fluorophore
     fig, axs = plt.subplots(F_len)
     fig.set_size_inches(4*F_len, 8)
+    if F_len == 1:
+        fig.set_size_inches(8, 8)
     
     for i in fluor_index:
         i = int(i)
