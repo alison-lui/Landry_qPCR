@@ -313,10 +313,11 @@ headers_adds = new_adds
 
 #%%
 
-# PLOT 1
+# PLOT 1 - RAW DATA
 
-# plot one figure for each fluorophore
-# each subplot is a different 'headers_main' category
+# ONE FIGURE ONLY
+# ONE SUBFIGURE FOR EACH 'HEADER_MAINS' CATEGORY
+
 
 for i in fluor_index:
     i = int(i)
@@ -348,8 +349,11 @@ for i in fluor_index:
     plt.tight_layout()
 
 #####################################################
+#%%
 
-# PLOT 2
+# PLOT 2 - RAW DATA
+
+# ONE FIGURE FOR EACH 'HEADER_MAINS' CATEGORY
 
 # plot one figure for each 'header_main' category
 # each subplot is a different fluorophore
@@ -386,7 +390,10 @@ for m in np.arange(0,len(headers_main)): # for each figure
 
 #%%
 
-# PLOT 3
+# PLOT 3 - RAW DATA
+
+# ONE FIGURE ONLY
+# ALL DATA ON THIS FIGURE. ONE COLOR PER 'HEADER_MAINS' CATEGORY
 
 # plot all data on one graph with 4 different colors for base concentrations
 fig, AX = plt.subplots()
@@ -436,23 +443,64 @@ plt.show()
 
 #%%
 
-# NORMALIZE DATA + PLOT 4.0
+# CORRECT DATA FOR PHOTOBLEACHING
 
-# normalize data
+# FIND THE DATA COLUMN THAT MATCHES HM AND HAS ADDS='HEPES'.
+# FROM THIS DATA, FIND THE DELTA THAT IS FROM PHOTOBLEACHING (DATA - DATA[0])
+# SUBTRACT THIS DELTA FROM EACH COLUMN THAT ALSO MATCHES HM
+
+controlstring = 'HEPES'
+
+data_ctrl = data.copy()
+
+for HM in headers_main:
+    
+    # make mask for header
+    mask_HM = headers[:,0] == HM
+    
+    # make mask for control data
+    mask = (headers[:,0] == HM) & (headers[:,1] == controlstring)
+        
+    # subtract control data from all other data with matching header
+    # extract header_indices to plot from headers[mask][2]
+    ctrl_index = int(headers[mask][0][2])
+    
+    # extract the photobleaching control data this corresponds to as 'delta'
+    delta = data_ctrl[:,ctrl_index,0] - data_ctrl[0,ctrl_index,0]
+        
+    # for every column to fix, subtract the photobleaching data
+    for i in np.arange(0,len(headers[mask_HM])): # these are all the columns that need to be corrected
+               
+        data_index = int(headers[mask_HM][i][2])  
+        
+        # regular raw data
+        data_ctrl[:,data_index,0] = data_ctrl[:,data_index,0] - delta
+
+#%%
+
+# NORMALIZE DATA
+
+# normalize regular raw data
 data_norm  = np.zeros(np.append(np.shape(data),2))
 stdev_norm = np.zeros(np.append(np.shape(data),2))
                      
-data_norm[:,:,:,0]  = data / data[0, :,:]
-data_norm[:,:,:,1]  = data / data[-1,:,:]
-stdev_norm[:,:,:,0] = stdev / data[0, :,:]
-stdev_norm[:,:,:,1] = stdev / data[-1,:,:]
+data_norm[:,:,:,0]  = data / data[0,:,:] # normalized to t0
+data_norm[:,:,:,1]  = data / data[-1,:,:] # normalized to tf
+stdev_norm[:,:,:,0] = stdev / data[0,:,:] # normalized to t0
+stdev_norm[:,:,:,1] = stdev / data[-1,:,:] # normalized to tf
+
+# normalized photobleach corrected data
+data_norm_ctrl  = np.zeros(np.append(np.shape(data_ctrl),2))
+stdev_norm_ctrl = np.zeros(np.append(np.shape(data_ctrl),2))
+                     
+data_norm_ctrl[:,:,:,0]  = data_ctrl / data_ctrl[0, :,:] # normalized to t0
+data_norm_ctrl[:,:,:,1]  = data_ctrl / data_ctrl[-1,:,:] # normalized to tf
+
 
 #%%
-# PLOT 4
+# PLOT 4 - NORMALIZED DATA (NOT PHOTOBLEACH CORRECTED)
 
-
-# plot one figure for each 'header_main' category
-# each subplot is a different fluorophore
+# ONE FIGURE FOR EACH 'HEADER_MAINS' CATEGORY
 
 for m in np.arange(0,len(headers_main)): # for each figure
     
@@ -472,12 +520,9 @@ for m in np.arange(0,len(headers_main)): # for each figure
     plt.tight_layout()
 
 #%%
-# PLOT 5
+# PLOT 5 - NORMALIZED DATA (NOT PHOTOBLEACH CORRECTED)
 
-# plot one figure for each 'header_adds' category
-# each subplot is a different fluorophore
-
-# NORMALIZED
+# ONE FIGURE FOR EACH 'HEADER_ADDS' CATEGORY
 
 for a in np.arange(0,len(headers_adds)): # for each figure
     
@@ -502,12 +547,9 @@ for a in np.arange(0,len(headers_adds)): # for each figure
     plt.tight_layout()
 
 #%%
-# PLOT 6
+# PLOT 6 - RAW DATA
 
-# plot one figure for each 'header_adds' category
-# each subplot is a different fluorophore
-
-# RAW DATA
+# ONE FIGURE FOR EACH 'HEADER_ADDS' CATEGORY
 
 for a in np.arange(0,len(headers_adds)): # for each figure
     
@@ -528,43 +570,12 @@ for a in np.arange(0,len(headers_adds)): # for each figure
     plt.tight_layout()
 
 
-#%%
-
-# CORRECT DATA FOR PHOTOBLEACHING
-
-# FIND THE DATA COLUMN THAT MATCHES HM AND HAS ADDS='HEPES'.
-# FROM THIS DATA, FIND THE DELTA THAT IS FROM PHOTOBLEACHING (DATA - DATA[0])
-# SUBTRACT THIS DELTA FROM EACH COLUMN THAT ALSO MATCHES HM
-
-controlstring = 'HEPES'
-
-data_ctrl = data
-
-for HM in headers_main:
-    
-    # make mask for header
-    mask_HM = headers[:,0] == HM
-    
-    # make mask for control data
-    mask = (headers[:,0] == HM) & (headers[:,1] == controlstring)
-        
-    # subtract control data from all other data with matching header
-    # extract header_indices to plot from headers[mask][2]
-    ctrl_index = int(headers[mask][0][2])
-    
-    for i in np.arange(0,len(headers[mask_HM])):
-        data_index = int(headers[mask_HM][i][2])
-
-        delta = data_ctrl[:,ctrl_index,0] - data_ctrl[0,ctrl_index,0]
-        
-        data_ctrl[:,data_index,0] = data_ctrl[:,data_index,0] - delta
-        
-        print(data_index)
 
 #%%
 
-# Plot Photobleach Corrected Data
+# PLOT 7 - PHOTOBLEACH CORRECTED DATA
 
+# ONE FIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
 
 for i in fluor_index:
     i = int(i)
@@ -591,7 +602,7 @@ for i in fluor_index:
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
     
-    fig.suptitle(fluor_name[int(fluor_index[i])], fontsize = 36)
+    fig.suptitle('Data Corrected for Photobleaching', fontsize = 20)
     
     plt.tight_layout()
 
@@ -617,16 +628,38 @@ for m in np.arange(0,len(headers_main)): # for each figure
             AX = axs
             
         makeplot(data_ctrl, stdev, HM, headers_adds, i, fig, AX)
-        AX.set_title(fluor_name[i])
+        AX.set_title(HM + ' - Corrected for Photobleaching', fontsize = 20)
         
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
         
-    fig.suptitle(HM, fontsize = 24)
     plt.tight_layout()
 
 #####################################################
 
+#%%
+
+# PLOT 8 - NORMALIZED AND PHOTOBLEACH CORRECTED DATA
+
+# ONE FIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
+
+
+for m in np.arange(0,len(headers_main)): # for each figure
+    
+    HM = headers_main[m]    
+    # start plots with one subplot for each normalization
+    fig, axs = plt.subplots(2)
+    fig.set_size_inches(8, 8)
+    
+    for t in [0,1]:
+        
+        makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, axs[t])
+        axs[t].set_xlabel('Minutes')
+        axs[t].set_ylabel('RFU')
+    axs[0].set_title(r'CF Emission normalized to $t_0$' + ' \n and corrected for photobleaching')
+    axs[1].set_title(r'CF Emission normalized to $t_f$' + ' \n and corrected for photobleaching')
+    fig.suptitle(HM, fontsize = 24)
+    plt.tight_layout()
 
 
 
