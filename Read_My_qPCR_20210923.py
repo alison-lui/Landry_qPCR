@@ -26,6 +26,8 @@ fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P76\q
 
 AverageDatainTriplicates = True
 
+LaTeXHeaders = False
+
 t_per_run = 2 # minutes
 
 fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
@@ -39,21 +41,23 @@ fluor_CalGold = False
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
-mpl.rcParams['text.usetex'] = True
+
 import matplotlib.pyplot as plt
 import os
 import sys
  
 #######################################  
 
-# use LaTeX fonts in the plot
-plt.rcParams.update({
-    "text.usetex": True,
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica"]})
-
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
+if LaTeXHeaders == True:    
+    # use LaTeX fonts in the plot
+    mpl.rcParams['text.usetex'] = True
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Helvetica"]})
+    
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
 
 #######################################  
 
