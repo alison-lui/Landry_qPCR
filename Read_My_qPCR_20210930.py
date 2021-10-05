@@ -27,10 +27,12 @@ To Do:
 
 """ Start by changing the following parameters """
 
-wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR"
-fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
+#wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR"
+#fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
+wdir = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR"
+fname   = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR/2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
 
-fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Headers.csv"
+fname_h = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR/2021-09-30_CF_quenching_and_photobleaching_controls -  Headers.csv"
 
 AverageDatainTriplicates = True
 
@@ -366,7 +368,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
     fig, axs = plt.subplots(F_len)
     fig.set_size_inches(6*F_len, 4)
     if F_len == 1:
-        fig.set_size_inches(8, 8)
+        fig.set_size_inches(8, 6)
     
     for i in fluor_index:
         i = int(i)
@@ -502,20 +504,31 @@ data_norm_ctrl[:,:,:,1]  = data_ctrl / data_ctrl[-1,:,:] # normalized to tf
 
 # ONE FIGURE FOR EACH 'HEADER_MAINS' CATEGORY
 
+# BOTH NORMALIZATION TO T0 AND TF ARE CALCULATED. ONLY T0 IS PLOTTED
+
 for m in np.arange(0,len(headers_main)): # for each figure
     
     HM = headers_main[m]    
     # start plots with one subplot for each normalization
-    fig, axs = plt.subplots(2)
-    fig.set_size_inches(8, 8)
+    fig, axs = plt.subplots()
+    fig.set_size_inches(8, 6)
     
-    for t in [0,1]:
+    X = [0] # CHANGE TO [1] FOR NORMALIZING TO TF
+    
+    for t in [0]: 
         
-        makeplot(data_norm[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, axs[t])
-        axs[t].set_xlabel('Minutes')
-        axs[t].set_ylabel('RFU')
-    axs[0].set_title(r'CF Emission normalized to $t_0$')
-    axs[1].set_title(r'CF Emission normalized to $t_f$')
+        if len(X) == 1:
+            AX = axs
+        else:
+            AX = axs[t]
+    
+        makeplot(data_norm[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+    if t == 0:
+        AX.set_title(r'CF Emission normalized to $t_0$')
+    elif t==1:
+        AX.set_title(r'CF Emission normalized to $t_f$')
     fig.suptitle(HM, fontsize = 24)
     plt.tight_layout()
 
@@ -575,7 +588,7 @@ for a in np.arange(0,len(headers_adds)): # for each figure
 
 # PLOT 7 - PHOTOBLEACH CORRECTED DATA
 
-# ONE FIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
+# 4 SUBLOTS ON ONE FIGURE
 
 for i in fluor_index:
     i = int(i)
@@ -585,9 +598,10 @@ for i in fluor_index:
     # start plots with one subplot for each header category
     if H_len > 1:
         fig, axs = plt.subplots(H_len, 1)
+        fig.set_size_inches(8, 4*H_len)
     else:
         fig, axs = plt.subplots()
-    fig.set_size_inches(8, 4*H_len)
+        fig.set_size_inches(8, 8)
 
     for m in np.arange(0,len(headers_main)): # for each subplot
         hm = headers_main[m]    
@@ -606,8 +620,11 @@ for i in fluor_index:
     
     plt.tight_layout()
 
-# plot one figure for each 'header_main' category
-# each subplot is a different fluorophore
+#%%
+
+# PLOT 8 - PHOTOBLEACH CORRECTED DATAT
+
+# ONE FIGURE FOR EACH 'HEADER_MAIN' CATEGORY
 
 for m in np.arange(0,len(headers_main)): # for each figure
     
@@ -617,7 +634,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
     fig, axs = plt.subplots(F_len)
     fig.set_size_inches(6*F_len, 4)
     if F_len == 1:
-        fig.set_size_inches(8, 8)
+        fig.set_size_inches(8, 6)
     
     for i in fluor_index:
         i = int(i)
@@ -639,7 +656,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
 
 #%%
 
-# PLOT 8 - NORMALIZED AND PHOTOBLEACH CORRECTED DATA
+# PLOT 9 - NORMALIZED AND PHOTOBLEACH CORRECTED DATA
 
 # ONE FIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
 
@@ -648,16 +665,25 @@ for m in np.arange(0,len(headers_main)): # for each figure
     
     HM = headers_main[m]    
     # start plots with one subplot for each normalization
-    fig, axs = plt.subplots(2)
-    fig.set_size_inches(8, 8)
+    fig, axs = plt.subplots()
+    fig.set_size_inches(8, 6)
     
-    for t in [0,1]:
+    X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
+    
+    for t in X:
         
-        makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, axs[t])
-        axs[t].set_xlabel('Minutes')
-        axs[t].set_ylabel('RFU')
-    axs[0].set_title(r'CF Emission normalized to $t_0$' + ' \n and corrected for photobleaching')
-    axs[1].set_title(r'CF Emission normalized to $t_f$' + ' \n and corrected for photobleaching')
+        if len(X) == 1:
+            AX = axs
+        else:
+            AX = axs[t]
+        
+        makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+    if t == 0:
+        AX.set_title(r'CF Emission normalized to $t_0$' + ' \n and corrected for photobleaching')
+    elif t == 1:
+        AX.set_title(r'CF Emission normalized to $t_f$' + ' \n and corrected for photobleaching')
     fig.suptitle(HM, fontsize = 24)
     plt.tight_layout()
 
