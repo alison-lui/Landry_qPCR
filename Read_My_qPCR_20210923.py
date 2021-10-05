@@ -452,7 +452,7 @@ for m in np.arange(0,len(headers_main)): # for each concentration
     
     AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
    
-AX.set_title('CF Fluorescence of All data')    
+AX.set_title('CF Emission of All data')    
 AX.set_xlabel('Minutes')
 AX.set_ylabel('RFU')
         
@@ -469,7 +469,7 @@ plt.show()
 # FROM THIS DATA, FIND THE DELTA THAT IS FROM PHOTOBLEACHING (DATA - DATA[0])
 # SUBTRACT THIS DELTA FROM EACH COLUMN THAT ALSO MATCHES HM
 
-controlstring = 'Control'
+controlstring = 'HEPES'
 
 data_ctrl = data.copy()
 
@@ -640,7 +640,7 @@ for i in fluor_index:
 
 #%%
 
-# PLOT 8 - PHOTOBLEACH CORRECTED DATAT
+# PLOT 8 - PHOTOBLEACH CORRECTED DATA
 
 # ONE FIGURE FOR EACH 'HEADER_MAIN' CATEGORY
 
@@ -663,7 +663,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
             AX = axs
             
         makeplot(data_ctrl, stdev, HM, headers_adds, i, fig, AX)
-        AX.set_title(HM + ' - Corrected for Photobleaching', fontsize = 20)
+        AX.set_title(HM + ' - Corrected for Photobleaching')
         
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
@@ -671,6 +671,91 @@ for m in np.arange(0,len(headers_main)): # for each figure
     plt.tight_layout()
 
 #####################################################
+
+#%%
+
+# PLOT 8.2 - PHOTOBLEACH CORRECTED DATA - 
+
+# ONE FIGURE FOR EACH 'HEADER_MAIN' CATEGORY
+
+# one figure for AuNP, one for SWNT
+
+######### NOT WORKING RIGHT NOW!!
+
+# current:
+"""
+headers_adds = 
+['HEPES',
+ '0.1% Triton',
+ '0.16 nM AuNP',
+ '0.4 nM AuNP',
+ '0.8 nM AuNP',
+ '1.6 nM AuNP',
+ '0.2 mg/L (GT)15-SWNT',
+ '0.4 mg/L (GT)15-SWNT',
+ '1 mg/L (GT)15-SWNT',
+ '2 mg/L (GT)15-SWNT']
+"""
+
+X = np.linspace(0, 1, len(headers_adds))
+
+colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_adds))]
+
+AuNP = ['HEPES',
+        '0.16 nM AuNP',
+        '0.4 nM AuNP',
+        '0.8 nM AuNP',
+        '1.6 nM AuNP',]
+
+c_temp = []
+for i in [0,3,4,5,6]:
+    c_temp = np.append(c_temp, X[i])
+c_AuNP = [plt.cm.viridis(x) for x in c_temp]
+
+SWNT =  ['HEPES',
+         '0.2 mg/L (GT)15-SWNT',
+         '0.4 mg/L (GT)15-SWNT',
+         '1 mg/L (GT)15-SWNT',
+         '2 mg/L (GT)15-SWNT']
+
+c_temp = []
+for i in [0,6,7,8,9]:
+    c_temp = np.append(c_temp, X[i])
+c_SWNT = [plt.cm.viridis(x) for x in c_temp]
+
+NP = [AuNP, SWNT]
+c = [c_AuNP, c_SWNT]
+
+
+for m in np.arange(0,len(headers_main)): # for each figure
+
+    HM = headers_main[m]    
+    F_len = len(fluor_index)
+    # start plots with one subplot for each fluorophore
+    
+    fig, axs = plt.subplots(1,2)    
+    for i in [0,1]:    
+
+        fig.set_size_inches(12, 4)
+        
+        AX = axs[i]
+            
+        makeplot(data_ctrl, stdev, HM, 
+                 ['HEPES',
+                    '0.16 nM AuNP',
+                    '0.4 nM AuNP',
+                    '0.8 nM AuNP',
+                    '1.6 nM AuNP',], 0, fig, AX)
+        
+        
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+        AX.set_ylim([2500,6500])
+    fig.suptitle(HM + ' - Corrected for Photobleaching')
+    plt.tight_layout()
+
+#####################################################
+
 
 #%%
 
@@ -788,7 +873,7 @@ for m in np.arange(0,len(headers_main)): # for each concentration
     
     AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
    
-AX.set_title(r'CF Emission normalized to $t_f$' + ' \n and corrected for photobleaching')  
+AX.set_title(r'CF Emission normalized to $t_0$' + ' \n and corrected for photobleaching')  
 AX.set_xlabel('Minutes')
 AX.set_ylabel('RFU')
         
