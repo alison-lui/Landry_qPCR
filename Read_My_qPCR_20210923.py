@@ -701,22 +701,22 @@ X = np.linspace(0, 1, len(headers_adds))
 
 colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_adds))]
 
-AuNP = ['HEPES',
+AuNP = list(['HEPES',
         '0.16 nM AuNP',
         '0.4 nM AuNP',
         '0.8 nM AuNP',
-        '1.6 nM AuNP',]
+        '1.6 nM AuNP',])
 
 c_temp = []
 for i in [0,3,4,5,6]:
     c_temp = np.append(c_temp, X[i])
 c_AuNP = [plt.cm.viridis(x) for x in c_temp]
 
-SWNT =  ['HEPES',
+SWNT =  list(['HEPES',
          '0.2 mg/L (GT)15-SWNT',
          '0.4 mg/L (GT)15-SWNT',
          '1 mg/L (GT)15-SWNT',
-         '2 mg/L (GT)15-SWNT']
+         '2 mg/L (GT)15-SWNT'])
 
 c_temp = []
 for i in [0,6,7,8,9]:
@@ -733,24 +733,20 @@ for m in np.arange(0,len(headers_main)): # for each figure
     F_len = len(fluor_index)
     # start plots with one subplot for each fluorophore
     
-    fig, axs = plt.subplots(1,2)    
+    fig, axs = plt.subplots(1,2)   
+    
     for i in [0,1]:    
 
-        fig.set_size_inches(12, 4)
+        fig.set_size_inches(12, 3)
         
         AX = axs[i]
             
-        makeplot(data_ctrl, stdev, HM, 
-                 ['HEPES',
-                    '0.16 nM AuNP',
-                    '0.4 nM AuNP',
-                    '0.8 nM AuNP',
-                    '1.6 nM AuNP',], 0, fig, AX)
+        makeplot(data_ctrl, stdev, HM, NP[i], 0, fig, AX)
         
         
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
-        AX.set_ylim([2500,6500])
+        #AX.set_ylim([2500,6500])
     fig.suptitle(HM + ' - Corrected for Photobleaching')
     plt.tight_layout()
 
@@ -881,5 +877,56 @@ plt.tight_layout()
 
 plt.show()
 
+#%%
+
+# PLOT 12 - NORMALIZED DATA
+
+# ONE FIGURE ONLY
+# ALL DATA ON THIS FIGURE. ONE COLOR PER 'HEADER_MAINS' CATEGORY
+
+# plot all data on one graph with 4 different colors for base concentrations
+fig, AX = plt.subplots()
+fig.set_size_inches(6, 4)
+
+for m in np.arange(0,len(headers_main)): # for each concentration
+    
+    HM = headers_main[m]    
+        
+    # loop through list of adds
+        # for each of adds values, create a mask on the data for [main, adds[i]]
+            # plot this one line
+   
+    h_index = np.arange(0,np.shape(data)[1])
+    
+    colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_main))]
+    
+    for i in np.arange(0,len(headers_adds)):
+        ai = headers_adds[i]
+        # mask against both main and adds conditions
+        mask = (headers[:,0] == HM) & (headers[:,1] == ai)
+        
+        # stop loop if mask is empty
+        if sum(mask) == 0:
+            break
+        
+        # extract header_indices to plot from headers[mask][2]
+        plot_index = int(headers[mask][0][2])
+    
+        # plot
+        # only label the first data point
+        if i == 1:
+            AX.plot(Time,data_norm[:,plot_index,0,0], color=colors[m], label = HM)
+        else:
+            AX.plot(Time,data_norm[:,plot_index,0,0], color=colors[m])
+    
+    AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+   
+AX.set_title(r'CF Emission normalized to $t_0$')  
+AX.set_xlabel('Minutes')
+AX.set_ylabel('RFU')
+        
+plt.tight_layout()
+
+plt.show()
 
 

@@ -140,7 +140,7 @@ if AverageDatainTriplicates == True:
 
 # Function for making plots
 
-def makeplot(data, stdev, main, adds, fi, FIG, AX, colors = 0, labels='adds'):
+def makeplot(data, stdev, main, adds, fi, FIG, AX, colors = 0, labels='adds', leg=True):
 
     """
     This function takes the 'mains', and 'adds' and creates a subplot of any 
@@ -186,8 +186,8 @@ def makeplot(data, stdev, main, adds, fi, FIG, AX, colors = 0, labels='adds'):
         AX.fill_between(Time, y+dev, y-dev, color=colors[i], alpha=0.4)
     
         #AX.errorbar(Time,, , color=colors[i], label = ai)
-    
-    AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+    if leg == True:
+        AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     
     return
     
@@ -677,7 +677,10 @@ for m in np.arange(0,len(headers_main)): # for each figure
         else:
             AX = axs[t]
         
-        makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
+        if HM == headers_main[-1]: # the last one, then plot the legend
+            makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
+        else:            
+            makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX, leg='False')
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
     if t == 0:
@@ -687,6 +690,83 @@ for m in np.arange(0,len(headers_main)): # for each figure
     fig.suptitle(HM, fontsize = 24)
     plt.tight_layout()
 
+#%%
+
+# PLOT 10 - NORMALIZED AND PHOTOBLEACH CORRECTED DATA
+
+# ONE SUBFIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
+
+fig, axs = plt.subplots(1,4)
+fig.set_size_inches(14, 6)
+    
+for m in np.arange(0,len(headers_main)): # for each figure
+    
+    HM = headers_main[m]    
+    # start plots with one subplot for each normalization
+    
+    AX = axs[m]
+    
+    
+    X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
+    
+    for t in X:
+                
+        if HM == headers_main[-1]: # the last one, then plot the legend
+            makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
+        else:            
+            makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX, leg='False')
+        
+        if HM == headers_main[0]: # the first one, give y axis label
+            AX.set_ylabel('RFU')
+        AX.set_xlabel('Minutes')
+        
+        AX.set_title(HM)
+        AX.set_ylim([0.93,1.06])
+    if t == 0:
+        fig.suptitle(r'CF Emission normalized to $t_0$ and corrected for photobleaching')               
+    elif t == 1:
+        fig.suptitle(r'CF Emission normalized to $t_f$ and corrected for photobleaching')
+
+                 
+    plt.tight_layout()
+
+#%%
+
+# PLOT 11 - PHOTOBLEACH CORRECTED DATA
+
+# ONE SUBFIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
+
+fig, axs = plt.subplots(1,4)
+fig.set_size_inches(14, 4)
+    
+for m in np.arange(0,len(headers_main)): # for each figure
+    
+    HM = headers_main[m]    
+    # start plots with one subplot for each normalization
+    
+    AX = axs[m]
+    
+    
+    X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
+    
+    for t in X:
+                
+        if HM == headers_main[-1]: # the last one, then plot the legend
+            makeplot(data_ctrl[:,:,:], stdev[:,:,:], HM, SWNT, 0, fig, AX)
+        else:            
+            makeplot(data_ctrl[:,:,:], stdev[:,:,:], HM, SWNT, 0, fig, AX, leg='False')
+        
+        if HM == headers_main[0]: # the first one, give y axis label
+            AX.set_ylabel('RFU')
+        AX.set_xlabel('Minutes')
+        
+        AX.set_title(HM)
+        
+    
+    fig.suptitle(r'CF Emission corrected for photobleaching')               
+    
+                 
+    plt.tight_layout()
 
 
 
