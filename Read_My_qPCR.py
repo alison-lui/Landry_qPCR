@@ -10,27 +10,18 @@ Created on Thu Sep  2 12:53:25 2021
 """
 To Do:
 
-[X] - Remove unecessary printing of data points in loops
-[]  - Add index to data array so that I can handle multiple fluorophores
-    [X] - completed for Plot 1
-    [X] - completed for Plot 2
-    []  - completed for Plot 3
-    []  - completed for Plot 4
-    []  - completed for Plot 5
-[X] - Add bar graph for fractions averaged over time
-[]  - Add Y/N options for each type of graph at the beginning parameters
-[]  - Update "Headers" file input to match a standard 96 well plate
-[]  - Extract Headers and legends directly from headers file (needs a consistent delimiter)
+[] - Update with plotting additions from 0923 and 0930
+[] - add LaTeX friendly options
 
 """
 
 
 """ Start by changing the following parameters """
 
-wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR"
-fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
+wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR"
+fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2021-10-07 CF-LUV Overnight -  Quantification Amplification Results_FAM.csv"
 
-fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Headers.csv"
+fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2021-10-07 CF-LUV Overnight -  Headers.csv"
 
 AverageDatainTriplicates = True
 
