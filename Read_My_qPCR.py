@@ -10,18 +10,29 @@ Created on Thu Sep  2 12:53:25 2021
 """
 To Do:
 
-[] - Update with plotting additions from 0923 and 0930
-[] - add LaTeX friendly options
+[X] - Remove unecessary printing of data points in loops
+[]  - Add index to data array so that I can handle multiple fluorophores
+    [X] - completed for Plot 1
+    [X] - completed for Plot 2
+    []  - completed for Plot 3
+    []  - completed for Plot 4
+    []  - completed for Plot 5
+[X] - Add bar graph for fractions averaged over time
+[]  - Add Y/N options for each type of graph at the beginning parameters
+[]  - Update "Headers" file input to match a standard 96 well plate
+[]  - Extract Headers and legends directly from headers file (needs a consistent delimiter)
 
 """
 
 
 """ Start by changing the following parameters """
 
-wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR"
-fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2021-10-07 CF-LUV Overnight -  Quantification Amplification Results_FAM.csv"
+#wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR"
+#fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
+wdir = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR"
+fname   = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR/2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
 
-fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2021-10-07 CF-LUV Overnight -  Headers.csv"
+fname_h = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR/2021-09-30_CF_quenching_and_photobleaching_controls -  Headers.csv"
 
 AverageDatainTriplicates = True
 
@@ -129,7 +140,7 @@ if AverageDatainTriplicates == True:
 
 # Function for making plots
 
-def makeplot(main, adds, fi, FIG, AX):
+def makeplot(data, stdev, main, adds, fi, FIG, AX, colors = 0, labels='adds', leg=True):
 
     """
     This function takes the 'mains', and 'adds' and creates a subplot of any 
@@ -143,10 +154,12 @@ def makeplot(main, adds, fi, FIG, AX):
    
     h_index = np.arange(0,np.shape(data)[1])
     
-    colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(adds))]
+    if colors == 0:
+        colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(adds))]
     
     for i in np.arange(0,len(adds)):
         ai = adds[i]
+        
         # mask against both main and adds conditions
         mask = (headers[:,0] == main) & (headers[:,1] == ai)
         
@@ -157,10 +170,24 @@ def makeplot(main, adds, fi, FIG, AX):
         # extract header_indices to plot from headers[mask][2]
         plot_index = int(headers[mask][0][2])
     
-        # plot
-        AX.errorbar(Time,data[:,plot_index,fi], stdev[:,plot_index,fi], color=colors[i], label = ai)
+        # define label by default or by design
+        if labels == 'adds':
+            lb = adds[i]
+        elif labels == 'main':
+            lb = main[0]
+        else:
+            lb = labels[i]
     
-    AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        # plot
+        y = data[:,plot_index,fi]
+        dev = stdev[:,plot_index,fi]
+        #ax[t].errorbar(Time, data_norm[t][i,:], stdev_norm[t][i,:], color=colors[i], label = headers_adds[i])
+        AX.plot(Time, y, color=colors[i], label = lb)
+        AX.fill_between(Time, y+dev, y-dev, color=colors[i], alpha=0.4)
+    
+        #AX.errorbar(Time,, , color=colors[i], label = ai)
+    if leg == True:
+        AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     
     return
     
@@ -216,6 +243,7 @@ while header_check == 'n':
     
     header_check = input("Would you like to keep this order? [y/n]: ")
     if header_check == 'y':
+        new_headers = headers_main
         break
     
     print("This is the current order:")
@@ -254,6 +282,7 @@ while adds_check == 'n':
     
     adds_check = input("Would you like to keep this order? [y/n]: ")
     if adds_check == 'y':
+        new_adds = headers_adds
         break
     
     # this only continues if answer is not 'y'
@@ -286,10 +315,11 @@ headers_adds = new_adds
 
 #%%
 
-# PLOT 1
+# PLOT 1 - RAW DATA
 
-# plot one figure for each fluorophore
-# each subplot is a different 'headers_main' category
+# ONE FIGURE ONLY
+# ONE SUBFIGURE FOR EACH 'HEADER_MAINS' CATEGORY
+
 
 for i in fluor_index:
     i = int(i)
@@ -311,7 +341,7 @@ for i in fluor_index:
         else:
             AX = axs
             
-        makeplot(hm, headers_adds, i, fig, AX)    
+        makeplot(data, stdev, hm, headers_adds, i, fig, AX)    
         AX.set_title(hm)
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
@@ -321,8 +351,11 @@ for i in fluor_index:
     plt.tight_layout()
 
 #####################################################
+#%%
 
-# PLOT 2
+# PLOT 2 - RAW DATA
+
+# ONE FIGURE FOR EACH 'HEADER_MAINS' CATEGORY
 
 # plot one figure for each 'header_main' category
 # each subplot is a different fluorophore
@@ -333,9 +366,9 @@ for m in np.arange(0,len(headers_main)): # for each figure
     F_len = len(fluor_index)
     # start plots with one subplot for each fluorophore
     fig, axs = plt.subplots(F_len)
-    fig.set_size_inches(4*F_len, 8)
+    fig.set_size_inches(6*F_len, 4)
     if F_len == 1:
-        fig.set_size_inches(8, 8)
+        fig.set_size_inches(8, 6)
     
     for i in fluor_index:
         i = int(i)
@@ -345,7 +378,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
         else:
             AX = axs
             
-        makeplot(HM, headers_adds, i, fig, AX)
+        makeplot(data, stdev, HM, headers_adds, i, fig, AX)
         AX.set_title(fluor_name[i])
         
         AX.set_xlabel('Minutes')
@@ -358,136 +391,387 @@ for m in np.arange(0,len(headers_main)): # for each figure
 
 
 #%%
-# PLOT 3
 
-# normalize each set of fraction data to the Triton average at last timepoint
+# PLOT 3 - RAW DATA
 
-# find the correct endpoints
-if AverageDatainTriplicates == True:
-    e_index = [(i+2) * t for i in range(0,N_SampleTypes - 2)]
-else:
-    e_index = [i * X + 2 * X for i in range(0,N_SampleTypes - 2)]
+# ONE FIGURE ONLY
+# ALL DATA ON THIS FIGURE. ONE COLOR PER 'HEADER_MAINS' CATEGORY
 
-endpoints = np.empty((len(e_index), len(fluor)))
-headers_norm = np.empty(len(e_index))
+# plot all data on one graph with 4 different colors for base concentrations
+fig, AX = plt.subplots()
+fig.set_size_inches(6, 4)
 
-for i in range(0,len(e_index)):
-    endpoints[i,:] = np.append(endpoints,data[i,-1,:])
-    headers_norm = np.append(headers_norm,headers[i])
-
-# now turn the endpoints list match the size and shape of the data list (X*sample number)
-temp = endpoints
-endpoints = np.empty((X * N_SampleTypes, len(fluor)))
-
-for i in temp: # for each fluorophore
+for m in np.arange(0,len(headers_main)): # for each concentration
     
-    r = []
+    HM = headers_main[m]    
+        
+    # loop through list of adds
+        # for each of adds values, create a mask on the data for [main, adds[i]]
+            # plot this one line
+   
+    h_index = np.arange(0,np.shape(data)[1])
     
-    for x in range(0,X):
-        r = np.append(r,temp[i])
-
-    endpoints = np.append(endpoints,r)
-
-# section out just the emission data (not the control data sets)
-fraction_avgs = em_avgs[-9:]
-fraction_std = em_std[-9:]
-fraction_headers = header_avgs[-9:]
-
-# divide emission data by the endpoints
-em_norm = fraction_avgs / endpoints[:,None]
-em_norm_std = fraction_std / endpoints[:,None]
-
-#####################################################
-
-# PLOT 4
-
-# plot each of the 3 now normalized samples in a stacked subplot
-
-fig, axs = plt.subplots(3)
-fig.set_size_inches(8, 7)
-
-L = 3
-
-for x in range(0,L):
+    colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_main))]
     
-    for i in range(0,3):
+    for i in np.arange(0,len(headers_adds)):
+        ai = headers_adds[i]
+        # mask against both main and adds conditions
+        mask = (headers[:,0] == HM) & (headers[:,1] == ai)
         
-        c2 = x+2 # to keep the fraction colors and subplot titles the same, use c2 instead of i
+        # stop loop if mask is empty
+        if sum(mask) == 0:
+            break
         
-        dstyle = ['-', '--', ':'] # line styles: solid, dashed, dotted
-        leg = ["0.0%", "0.1%", "0.2%"]        
-        index = x*3 + i
-
-        axs[x].errorbar(Time, em_norm[index,:], em_norm_std[index,:], color=colors[c2], linestyle=dstyle[i], label = leg[i])
-        axs[x].set_ylabel('FAM Emission')
-        axs[x].set_xlabel('Time (minutes)')
-        axs[x].set_xlim(0,250)
+        # extract header_indices to plot from headers[mask][2]
+        plot_index = int(headers[mask][0][2])
+    
+        # plot
+        # only label the first data point
+        if i == 1:
+            AX.plot(Time,data[:,plot_index,0], color=colors[m], label = HM)
+        else:
+            AX.plot(Time,data[:,plot_index,0], color=colors[m])
+    
+    AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+   
+AX.set_title('CF Fluorescence of All data')    
+AX.set_xlabel('Minutes')
+AX.set_ylabel('RFU')
         
-        temptitle = header_avgs[e_index[x]]
-        subplot_title = temptitle[:-7] + " - Normalized"
-        
-        axs[x].set_title(subplot_title)
-        axs[x].legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-
 plt.tight_layout()
 
+plt.show()
 
-#####################################################
 
-# PLOT 5
+#%%
 
-# Plot normalized fractions on one graph
+# CORRECT DATA FOR PHOTOBLEACHING
 
-# plot each of the 3 now normalized samples in a stacked subplot
-fig, axs = plt.subplots(1)
-fig.set_size_inches(8, 4)
+# FIND THE DATA COLUMN THAT MATCHES HM AND HAS ADDS='HEPES'.
+# FROM THIS DATA, FIND THE DELTA THAT IS FROM PHOTOBLEACHING (DATA - DATA[0])
+# SUBTRACT THIS DELTA FROM EACH COLUMN THAT ALSO MATCHES HM
 
-L = 3
+controlstring = 'HEPES'
 
-for x in range(0,L):
+data_ctrl = data.copy()
+
+for HM in headers_main:
     
-    for i in range(0,3):
+    # make mask for header
+    mask_HM = headers[:,0] == HM
+    
+    # make mask for control data
+    mask = (headers[:,0] == HM) & (headers[:,1] == controlstring)
         
-        c2 = x+2 # to keep the fraction colors and subplot titles the same, use c2 instead of i
+    # subtract control data from all other data with matching header
+    # extract header_indices to plot from headers[mask][2]
+    ctrl_index = int(headers[mask][0][2])
+    
+    # extract the photobleaching control data this corresponds to as 'delta'
+    delta = data_ctrl[:,ctrl_index,0] - data_ctrl[0,ctrl_index,0]
         
-        dstyle = ['-', '--', ':'] # line styles: solid, dashed, dotted
-        leg = ["0.0%", "0.1%", "0.2%"]        
-        index = x*3 + i
+    # for every column to fix, subtract the photobleaching data
+    for i in np.arange(0,len(headers[mask_HM])): # these are all the columns that need to be corrected
+               
+        data_index = int(headers[mask_HM][i][2])  
         
-        axs.errorbar(Time, em_norm[index,:], em_norm_std[index,:], color=colors[c2], linestyle=dstyle[i], label = header_avgs[i])
-        axs.set_ylabel('FAM Emission')
-        axs.set_xlabel('Time (minutes)')
-        axs.set_xlim(0,250)
+        # regular raw data
+        data_ctrl[:,data_index,0] = data_ctrl[:,data_index,0] - delta
+
+#%%
+
+# NORMALIZE DATA
+
+# normalize regular raw data
+data_norm  = np.zeros(np.append(np.shape(data),2))
+stdev_norm = np.zeros(np.append(np.shape(data),2))
+                     
+data_norm[:,:,:,0]  = data / data[0,:,:] # normalized to t0
+data_norm[:,:,:,1]  = data / data[-1,:,:] # normalized to tf
+stdev_norm[:,:,:,0] = stdev / data[0,:,:] # normalized to t0
+stdev_norm[:,:,:,1] = stdev / data[-1,:,:] # normalized to tf
+
+# normalized photobleach corrected data
+data_norm_ctrl  = np.zeros(np.append(np.shape(data_ctrl),2))
+stdev_norm_ctrl = np.zeros(np.append(np.shape(data_ctrl),2))
+                     
+data_norm_ctrl[:,:,:,0]  = data_ctrl / data_ctrl[0, :,:] # normalized to t0
+data_norm_ctrl[:,:,:,1]  = data_ctrl / data_ctrl[-1,:,:] # normalized to tf
+
+
+#%%
+# PLOT 4 - NORMALIZED DATA (NOT PHOTOBLEACH CORRECTED)
+
+# ONE FIGURE FOR EACH 'HEADER_MAINS' CATEGORY
+
+# BOTH NORMALIZATION TO T0 AND TF ARE CALCULATED. ONLY T0 IS PLOTTED
+
+for m in np.arange(0,len(headers_main)): # for each figure
+    
+    HM = headers_main[m]    
+    # start plots with one subplot for each normalization
+    fig, axs = plt.subplots()
+    fig.set_size_inches(8, 6)
+    
+    X = [0] # CHANGE TO [1] FOR NORMALIZING TO TF
+    
+    for t in [0]: 
         
+        if len(X) == 1:
+            AX = axs
+        else:
+            AX = axs[t]
+    
+        makeplot(data_norm[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+    if t == 0:
+        AX.set_title(r'CF Emission normalized to $t_0$')
+    elif t==1:
+        AX.set_title(r'CF Emission normalized to $t_f$')
+    fig.suptitle(HM, fontsize = 24)
+    plt.tight_layout()
+
+#%%
+# PLOT 5 - NORMALIZED DATA (NOT PHOTOBLEACH CORRECTED)
+
+# ONE FIGURE FOR EACH 'HEADER_ADDS' CATEGORY
+
+for a in np.arange(0,len(headers_adds)): # for each figure
+    
+    ai = headers_adds[a]    
+    # start plots with one subplot for each normalization
+    fig, axs = plt.subplots(2)
+    fig.set_size_inches(8, 8)
+    
+    colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_main))]
+    
+    for m in np.arange(0,len(headers_main)):
+        HM = headers_main[m]
         
-axs.set_title('Fractions 4, 5, 6 - Normalized')        
-axs.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-plt.tight_layout()
+        for t in [0,1]:
+            
+            makeplot(data_norm[:,:,:,t], stdev_norm[:,:,:,t], [HM], [ai], 0, fig, axs[t], [colors[m]], labels='main')
+            axs[t].set_xlabel('Minutes')
+            axs[t].set_ylabel('RFU')
+        axs[0].set_title(r'CF Emission normalized to $t_0$')
+        axs[1].set_title(r'CF Emission normalized to $t_f$')
+    fig.suptitle(ai, fontsize = 24)
+    plt.tight_layout()
+
+#%%
+# PLOT 6 - RAW DATA
+
+# ONE FIGURE FOR EACH 'HEADER_ADDS' CATEGORY
+
+for a in np.arange(0,len(headers_adds)): # for each figure
+    
+    ai = headers_adds[a]    
+    # start plots with one subplot for each normalization
+    fig, axs = plt.subplots()
+    fig.set_size_inches(8, 8)
+    
+    colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_main))]
+    
+    for m in np.arange(0,len(headers_main)):
+        HM = headers_main[m]
+    
+        makeplot(data[:,:,:], stdev[:,:,:], [HM], [ai], 0, fig, axs, [colors[m]], labels='main')
+        axs.set_xlabel('Minutes')
+        axs.set_ylabel('RFU')
+    fig.suptitle(ai, fontsize = 24)
+    plt.tight_layout()
 
 
 
-###################################################
+#%%
 
-# PLOT 6
+# PLOT 7 - PHOTOBLEACH CORRECTED DATA
 
-# Bar graph!
-
-# get plot title from filename
-title = os.path.basename(base)
-
-# average data along all time points
-
-bar_data = np.average(data, axis=0)
-
-fig, ax = plt.subplots(1)
-fig.set_size_inches(8, 4)
-
-X = np.arange(t)
+# 4 SUBLOTS ON ONE FIGURE
 
 for i in fluor_index:
     i = int(i)
-    ax.bar(X + i/4, bar_data[:,i], color = fluor_colors[i], width = 0.25, label = fluor_name[i])
-           
-plt.xticks(X, headers, rotation=90)
-plt.set_title(title)
-ax.legend()
+    
+    H_len = len(headers_main)
+
+    # start plots with one subplot for each header category
+    if H_len > 1:
+        fig, axs = plt.subplots(H_len, 1)
+        fig.set_size_inches(8, 4*H_len)
+    else:
+        fig, axs = plt.subplots()
+        fig.set_size_inches(8, 8)
+
+    for m in np.arange(0,len(headers_main)): # for each subplot
+        hm = headers_main[m]    
+        
+        if H_len > 1:
+            AX = axs[m]
+        else:
+            AX = axs
+            
+        makeplot(data_ctrl, stdev, hm, headers_adds, i, fig, AX)    
+        AX.set_title(hm)
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+    
+    fig.suptitle('Data Corrected for Photobleaching', fontsize = 20)
+    
+    plt.tight_layout()
+
+#%%
+
+# PLOT 8 - PHOTOBLEACH CORRECTED DATAT
+
+# ONE FIGURE FOR EACH 'HEADER_MAIN' CATEGORY
+
+for m in np.arange(0,len(headers_main)): # for each figure
+    
+    HM = headers_main[m]    
+    F_len = len(fluor_index)
+    # start plots with one subplot for each fluorophore
+    fig, axs = plt.subplots(F_len)
+    fig.set_size_inches(6*F_len, 4)
+    if F_len == 1:
+        fig.set_size_inches(8, 6)
+    
+    for i in fluor_index:
+        i = int(i)
+        
+        if F_len > 1:
+            AX = axs[i]
+        else:
+            AX = axs
+            
+        makeplot(data_ctrl, stdev, HM, headers_adds, i, fig, AX)
+        AX.set_title(HM + ' - Corrected for Photobleaching', fontsize = 20)
+        
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+        
+    plt.tight_layout()
+
+#####################################################
+
+#%%
+
+# PLOT 9 - NORMALIZED AND PHOTOBLEACH CORRECTED DATA
+
+# ONE FIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
+
+
+for m in np.arange(0,len(headers_main)): # for each figure
+    
+    HM = headers_main[m]    
+    # start plots with one subplot for each normalization
+    fig, axs = plt.subplots()
+    fig.set_size_inches(8, 6)
+    
+    X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
+    
+    for t in X:
+        
+        if len(X) == 1:
+            AX = axs
+        else:
+            AX = axs[t]
+        
+        if HM == headers_main[-1]: # the last one, then plot the legend
+            makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
+        else:            
+            makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX, leg='False')
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+    if t == 0:
+        AX.set_title(r'CF Emission normalized to $t_0$' + ' \n and corrected for photobleaching')
+    elif t == 1:
+        AX.set_title(r'CF Emission normalized to $t_f$' + ' \n and corrected for photobleaching')
+    fig.suptitle(HM, fontsize = 24)
+    plt.tight_layout()
+
+#%%
+
+# PLOT 10 - NORMALIZED AND PHOTOBLEACH CORRECTED DATA
+
+# ONE SUBFIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
+
+fig, axs = plt.subplots(1,4)
+fig.set_size_inches(14, 6)
+    
+for m in np.arange(0,len(headers_main)): # for each figure
+    
+    HM = headers_main[m]    
+    # start plots with one subplot for each normalization
+    
+    AX = axs[m]
+    
+    
+    X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
+    
+    for t in X:
+                
+        if HM == headers_main[-1]: # the last one, then plot the legend
+            makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
+        else:            
+            makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX, leg='False')
+        
+        if HM == headers_main[0]: # the first one, give y axis label
+            AX.set_ylabel('RFU')
+        AX.set_xlabel('Minutes')
+        
+        AX.set_title(HM)
+        AX.set_ylim([0.93,1.06])
+    if t == 0:
+        fig.suptitle(r'CF Emission normalized to $t_0$ and corrected for photobleaching')               
+    elif t == 1:
+        fig.suptitle(r'CF Emission normalized to $t_f$ and corrected for photobleaching')
+
+                 
+    plt.tight_layout()
+
+#%%
+
+# PLOT 11 - PHOTOBLEACH CORRECTED DATA
+
+# ONE SUBFIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
+
+fig, axs = plt.subplots(1,4)
+fig.set_size_inches(14, 4)
+    
+for m in np.arange(0,len(headers_main)): # for each figure
+    
+    HM = headers_main[m]    
+    # start plots with one subplot for each normalization
+    
+    AX = axs[m]
+    
+    
+    X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
+    
+    for t in X:
+                
+        if HM == headers_main[-1]: # the last one, then plot the legend
+            makeplot(data_ctrl[:,:,:], stdev[:,:,:], HM, SWNT, 0, fig, AX)
+        else:            
+            makeplot(data_ctrl[:,:,:], stdev[:,:,:], HM, SWNT, 0, fig, AX, leg='False')
+        
+        if HM == headers_main[0]: # the first one, give y axis label
+            AX.set_ylabel('RFU')
+        AX.set_xlabel('Minutes')
+        
+        AX.set_title(HM)
+        
+    
+    fig.suptitle(r'CF Emission corrected for photobleaching')               
+    
+                 
+    plt.tight_layout()
+
+
+
+
+
+
+
+
