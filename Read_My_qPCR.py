@@ -118,24 +118,24 @@ if AverageDatainTriplicates == True:
     temp_avg = np.empty((H,t,N_fluor))
     temp_std = np.empty((H,t,N_fluor))
     temp_hdr = [] # append strings to an empty array rather than pre-generate an empty array
- 
+
     for i in fluor_index:
         i = int(i)
         for x in range(0,t):
             r = int(x*3)
             temp_avg[:,x,i] = np.mean(data[:,r:r+3,i],1)
             temp_std[:,x,i] = np.std( data[:,r:r+3,i],1)
-    
+
     for x in range(0,t):
         r = int(x*3)
         temp_hdr = np.append(temp_hdr, headers[r]) # only take the header from the first of the triplicates
-    
-    # rename variables 
+
+    # rename variables
     data = temp_avg
     stdev = temp_std
     headers = temp_hdr
-    
-    
+
+
 #####################################################
 
 # Function for making plots
@@ -143,33 +143,33 @@ if AverageDatainTriplicates == True:
 def makeplot(data, stdev, main, adds, fi, FIG, AX, colors = 0, labels='adds', leg=True):
 
     """
-    This function takes the 'mains', and 'adds' and creates a subplot of any 
-    data which matches from the header index. fig and ax are the already made 
+    This function takes the 'mains', and 'adds' and creates a subplot of any
+    data which matches from the header index. fig and ax are the already made
     fig and axes that we want to put the plot onto
     """
-    
+
     # loop through list of adds
         # for each of adds values, create a mask on the data for [main, adds[i]]
             # plot this one line
-   
+
     h_index = np.arange(0,np.shape(data)[1])
-    
+
     if colors == 0:
         colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(adds))]
-    
+
     for i in np.arange(0,len(adds)):
         ai = adds[i]
-        
+
         # mask against both main and adds conditions
         mask = (headers[:,0] == main) & (headers[:,1] == ai)
-        
+
         # stop loop if mask is empty
         if sum(mask) == 0:
             break
-        
+
         # extract header_indices to plot from headers[mask][2]
         plot_index = int(headers[mask][0][2])
-    
+
         # define label by default or by design
         if labels == 'adds':
             lb = adds[i]
@@ -177,20 +177,20 @@ def makeplot(data, stdev, main, adds, fi, FIG, AX, colors = 0, labels='adds', le
             lb = main[0]
         else:
             lb = labels[i]
-    
+
         # plot
         y = data[:,plot_index,fi]
         dev = stdev[:,plot_index,fi]
         #ax[t].errorbar(Time, data_norm[t][i,:], stdev_norm[t][i,:], color=colors[i], label = headers_adds[i])
         AX.plot(Time, y, color=colors[i], label = lb)
         AX.fill_between(Time, y+dev, y-dev, color=colors[i], alpha=0.4)
-    
+
         #AX.errorbar(Time,, , color=colors[i], label = ai)
     if leg == True:
         AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-    
+
     return
-    
+
 #####################################################
 
 # Header Formatting
@@ -208,8 +208,8 @@ for i in np.arange(0,len(headers)):
 temp = []
 for i in np.arange(0,len(headers)):
     temp = np.append(temp, headers[i])
-    temp = np.append(temp, header_index[i])   
-temp = np.reshape(temp, (len(header_index),3))  
+    temp = np.append(temp, header_index[i])
+temp = np.reshape(temp, (len(header_index),3))
 
 # remove any headers that say 'blank'
 #for i in reversed(np.arange(0,len(headers))):
@@ -237,31 +237,31 @@ headers_adds.sort()
 
 header_check = 'n'
 while header_check == 'n':
-    
+
     print("Main Headers are :")
     print(headers_main)
-    
+
     header_check = input("Would you like to keep this order? [y/n]: ")
     if header_check == 'y':
         new_headers = headers_main
         break
-    
+
     print("This is the current order:")
-        
+
     for i in np.arange(0,len(headers_main)):
         print(str(i) + ": " + headers_main[i])
 
-    # give me the new order        
+    # give me the new order
     neworder = input("List the new order in the format of [3,0,2,1] with brackets, commas, and no spaces: ")
 
-    # create a new order    
+    # create a new order
     index = neworder[1:-1].split(",")
     new_headers = []
     for i in index:
         i = int(i)
         new_headers = np.append(new_headers, headers_main[int(i)])
         new_headers = list(new_headers)
-    
+
     #check the new order
     print("Just to check, this is the new order you wanted?")
     for i in np.arange(0,len(new_headers)):
@@ -276,32 +276,32 @@ print("Ok, thanks!")
 
 adds_check = 'n'
 while adds_check == 'n':
-    
+
     print("Main Adds are :")
     print(headers_adds)
-    
+
     adds_check = input("Would you like to keep this order? [y/n]: ")
     if adds_check == 'y':
         new_adds = headers_adds
         break
-    
+
     # this only continues if answer is not 'y'
     print("This is the current order:")
-        
+
     for i in np.arange(0,len(headers_adds)):
         print(str(i) + ": " + headers_adds[i])
 
-    # give me the new order        
+    # give me the new order
     neworder = input("List the new order in the format of [0,3,1,2] with brackets, commas, and no spaces: ")
 
-    # create a new order    
+    # create a new order
     index = neworder[1:-1].split(",")
     new_adds = []
     for i in index:
         i = int(i)
         new_adds = np.append(new_adds, headers_adds[int(i)])
         new_adds = list(new_adds)
-    
+
     #check the new order
     print("Just to check, this is the new order you wanted?")
     for i in np.arange(0,len(new_adds)):
@@ -323,7 +323,7 @@ headers_adds = new_adds
 
 for i in fluor_index:
     i = int(i)
-    
+
     H_len = len(headers_main)
 
     # start plots with one subplot for each header category
@@ -334,20 +334,20 @@ for i in fluor_index:
     fig.set_size_inches(8, 4*H_len)
 
     for m in np.arange(0,len(headers_main)): # for each subplot
-        hm = headers_main[m]    
-        
+        hm = headers_main[m]
+
         if H_len > 1:
             AX = axs[m]
         else:
             AX = axs
-            
-        makeplot(data, stdev, hm, headers_adds, i, fig, AX)    
+
+        makeplot(data, stdev, hm, headers_adds, i, fig, AX)
         AX.set_title(hm)
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
-    
+
     fig.suptitle(fluor_name[int(fluor_index[i])], fontsize = 36)
-    
+
     plt.tight_layout()
 
 #####################################################
@@ -361,29 +361,29 @@ for i in fluor_index:
 # each subplot is a different fluorophore
 
 for m in np.arange(0,len(headers_main)): # for each figure
-    
-    HM = headers_main[m]    
+
+    HM = headers_main[m]
     F_len = len(fluor_index)
     # start plots with one subplot for each fluorophore
     fig, axs = plt.subplots(F_len)
     fig.set_size_inches(6*F_len, 4)
     if F_len == 1:
         fig.set_size_inches(8, 6)
-    
+
     for i in fluor_index:
         i = int(i)
-        
+
         if F_len > 1:
             AX = axs[i]
         else:
             AX = axs
-            
+
         makeplot(data, stdev, HM, headers_adds, i, fig, AX)
         AX.set_title(fluor_name[i])
-        
+
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
-        
+
     fig.suptitle(HM, fontsize = 24)
     plt.tight_layout()
 
@@ -402,42 +402,42 @@ fig, AX = plt.subplots()
 fig.set_size_inches(6, 4)
 
 for m in np.arange(0,len(headers_main)): # for each concentration
-    
-    HM = headers_main[m]    
-        
+
+    HM = headers_main[m]
+
     # loop through list of adds
         # for each of adds values, create a mask on the data for [main, adds[i]]
             # plot this one line
-   
+
     h_index = np.arange(0,np.shape(data)[1])
-    
+
     colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_main))]
-    
+
     for i in np.arange(0,len(headers_adds)):
         ai = headers_adds[i]
         # mask against both main and adds conditions
         mask = (headers[:,0] == HM) & (headers[:,1] == ai)
-        
+
         # stop loop if mask is empty
         if sum(mask) == 0:
             break
-        
+
         # extract header_indices to plot from headers[mask][2]
         plot_index = int(headers[mask][0][2])
-    
+
         # plot
         # only label the first data point
         if i == 1:
             AX.plot(Time,data[:,plot_index,0], color=colors[m], label = HM)
         else:
             AX.plot(Time,data[:,plot_index,0], color=colors[m])
-    
+
     AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
-   
-AX.set_title('CF Fluorescence of All data')    
+
+AX.set_title('CF Fluorescence of All data')
 AX.set_xlabel('Minutes')
 AX.set_ylabel('RFU')
-        
+
 plt.tight_layout()
 
 plt.show()
@@ -456,25 +456,25 @@ controlstring = 'HEPES'
 data_ctrl = data.copy()
 
 for HM in headers_main:
-    
+
     # make mask for header
     mask_HM = headers[:,0] == HM
-    
+
     # make mask for control data
     mask = (headers[:,0] == HM) & (headers[:,1] == controlstring)
-        
+
     # subtract control data from all other data with matching header
     # extract header_indices to plot from headers[mask][2]
     ctrl_index = int(headers[mask][0][2])
-    
+
     # extract the photobleaching control data this corresponds to as 'delta'
     delta = data_ctrl[:,ctrl_index,0] - data_ctrl[0,ctrl_index,0]
-        
+
     # for every column to fix, subtract the photobleaching data
     for i in np.arange(0,len(headers[mask_HM])): # these are all the columns that need to be corrected
-               
-        data_index = int(headers[mask_HM][i][2])  
-        
+
+        data_index = int(headers[mask_HM][i][2])
+
         # regular raw data
         data_ctrl[:,data_index,0] = data_ctrl[:,data_index,0] - delta
 
@@ -485,7 +485,7 @@ for HM in headers_main:
 # normalize regular raw data
 data_norm  = np.zeros(np.append(np.shape(data),2))
 stdev_norm = np.zeros(np.append(np.shape(data),2))
-                     
+
 data_norm[:,:,:,0]  = data / data[0,:,:] # normalized to t0
 data_norm[:,:,:,1]  = data / data[-1,:,:] # normalized to tf
 stdev_norm[:,:,:,0] = stdev / data[0,:,:] # normalized to t0
@@ -494,7 +494,7 @@ stdev_norm[:,:,:,1] = stdev / data[-1,:,:] # normalized to tf
 # normalized photobleach corrected data
 data_norm_ctrl  = np.zeros(np.append(np.shape(data_ctrl),2))
 stdev_norm_ctrl = np.zeros(np.append(np.shape(data_ctrl),2))
-                     
+
 data_norm_ctrl[:,:,:,0]  = data_ctrl / data_ctrl[0, :,:] # normalized to t0
 data_norm_ctrl[:,:,:,1]  = data_ctrl / data_ctrl[-1,:,:] # normalized to tf
 
@@ -507,21 +507,21 @@ data_norm_ctrl[:,:,:,1]  = data_ctrl / data_ctrl[-1,:,:] # normalized to tf
 # BOTH NORMALIZATION TO T0 AND TF ARE CALCULATED. ONLY T0 IS PLOTTED
 
 for m in np.arange(0,len(headers_main)): # for each figure
-    
-    HM = headers_main[m]    
+
+    HM = headers_main[m]
     # start plots with one subplot for each normalization
     fig, axs = plt.subplots()
     fig.set_size_inches(8, 6)
-    
+
     X = [0] # CHANGE TO [1] FOR NORMALIZING TO TF
-    
-    for t in [0]: 
-        
+
+    for t in [0]:
+
         if len(X) == 1:
             AX = axs
         else:
             AX = axs[t]
-    
+
         makeplot(data_norm[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
@@ -538,19 +538,19 @@ for m in np.arange(0,len(headers_main)): # for each figure
 # ONE FIGURE FOR EACH 'HEADER_ADDS' CATEGORY
 
 for a in np.arange(0,len(headers_adds)): # for each figure
-    
-    ai = headers_adds[a]    
+
+    ai = headers_adds[a]
     # start plots with one subplot for each normalization
     fig, axs = plt.subplots(2)
     fig.set_size_inches(8, 8)
-    
+
     colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_main))]
-    
+
     for m in np.arange(0,len(headers_main)):
         HM = headers_main[m]
-        
+
         for t in [0,1]:
-            
+
             makeplot(data_norm[:,:,:,t], stdev_norm[:,:,:,t], [HM], [ai], 0, fig, axs[t], [colors[m]], labels='main')
             axs[t].set_xlabel('Minutes')
             axs[t].set_ylabel('RFU')
@@ -565,17 +565,17 @@ for a in np.arange(0,len(headers_adds)): # for each figure
 # ONE FIGURE FOR EACH 'HEADER_ADDS' CATEGORY
 
 for a in np.arange(0,len(headers_adds)): # for each figure
-    
-    ai = headers_adds[a]    
+
+    ai = headers_adds[a]
     # start plots with one subplot for each normalization
     fig, axs = plt.subplots()
     fig.set_size_inches(8, 8)
-    
+
     colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_main))]
-    
+
     for m in np.arange(0,len(headers_main)):
         HM = headers_main[m]
-    
+
         makeplot(data[:,:,:], stdev[:,:,:], [HM], [ai], 0, fig, axs, [colors[m]], labels='main')
         axs.set_xlabel('Minutes')
         axs.set_ylabel('RFU')
@@ -592,7 +592,7 @@ for a in np.arange(0,len(headers_adds)): # for each figure
 
 for i in fluor_index:
     i = int(i)
-    
+
     H_len = len(headers_main)
 
     # start plots with one subplot for each header category
@@ -604,20 +604,20 @@ for i in fluor_index:
         fig.set_size_inches(8, 8)
 
     for m in np.arange(0,len(headers_main)): # for each subplot
-        hm = headers_main[m]    
-        
+        hm = headers_main[m]
+
         if H_len > 1:
             AX = axs[m]
         else:
             AX = axs
-            
-        makeplot(data_ctrl, stdev, hm, headers_adds, i, fig, AX)    
+
+        makeplot(data_ctrl, stdev, hm, headers_adds, i, fig, AX)
         AX.set_title(hm)
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
-    
+
     fig.suptitle('Data Corrected for Photobleaching', fontsize = 20)
-    
+
     plt.tight_layout()
 
 #%%
@@ -627,29 +627,29 @@ for i in fluor_index:
 # ONE FIGURE FOR EACH 'HEADER_MAIN' CATEGORY
 
 for m in np.arange(0,len(headers_main)): # for each figure
-    
-    HM = headers_main[m]    
+
+    HM = headers_main[m]
     F_len = len(fluor_index)
     # start plots with one subplot for each fluorophore
     fig, axs = plt.subplots(F_len)
     fig.set_size_inches(6*F_len, 4)
     if F_len == 1:
         fig.set_size_inches(8, 6)
-    
+
     for i in fluor_index:
         i = int(i)
-        
+
         if F_len > 1:
             AX = axs[i]
         else:
             AX = axs
-            
+
         makeplot(data_ctrl, stdev, HM, headers_adds, i, fig, AX)
         AX.set_title(HM + ' - Corrected for Photobleaching', fontsize = 20)
-        
+
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
-        
+
     plt.tight_layout()
 
 #####################################################
@@ -662,24 +662,24 @@ for m in np.arange(0,len(headers_main)): # for each figure
 
 
 for m in np.arange(0,len(headers_main)): # for each figure
-    
-    HM = headers_main[m]    
+
+    HM = headers_main[m]
     # start plots with one subplot for each normalization
     fig, axs = plt.subplots()
     fig.set_size_inches(8, 6)
-    
+
     X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
-    
+
     for t in X:
-        
+
         if len(X) == 1:
             AX = axs
         else:
             AX = axs[t]
-        
+
         if HM == headers_main[-1]: # the last one, then plot the legend
             makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
-        else:            
+        else:
             makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX, leg='False')
         AX.set_xlabel('Minutes')
         AX.set_ylabel('RFU')
@@ -698,36 +698,36 @@ for m in np.arange(0,len(headers_main)): # for each figure
 
 fig, axs = plt.subplots(1,4)
 fig.set_size_inches(14, 6)
-    
+
 for m in np.arange(0,len(headers_main)): # for each figure
-    
-    HM = headers_main[m]    
+
+    HM = headers_main[m]
     # start plots with one subplot for each normalization
-    
+
     AX = axs[m]
-    
-    
+
+
     X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
-    
+
     for t in X:
-                
+
         if HM == headers_main[-1]: # the last one, then plot the legend
             makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX)
-        else:            
+        else:
             makeplot(data_norm_ctrl[:,:,:,t], stdev_norm[:,:,:,t], HM, headers_adds, 0, fig, AX, leg='False')
-        
+
         if HM == headers_main[0]: # the first one, give y axis label
             AX.set_ylabel('RFU')
         AX.set_xlabel('Minutes')
-        
+
         AX.set_title(HM)
         AX.set_ylim([0.93,1.06])
     if t == 0:
-        fig.suptitle(r'CF Emission normalized to $t_0$ and corrected for photobleaching')               
+        fig.suptitle(r'CF Emission normalized to $t_0$ and corrected for photobleaching')
     elif t == 1:
         fig.suptitle(r'CF Emission normalized to $t_f$ and corrected for photobleaching')
 
-                 
+
     plt.tight_layout()
 
 #%%
@@ -738,40 +738,32 @@ for m in np.arange(0,len(headers_main)): # for each figure
 
 fig, axs = plt.subplots(1,4)
 fig.set_size_inches(14, 4)
-    
+
 for m in np.arange(0,len(headers_main)): # for each figure
-    
-    HM = headers_main[m]    
+
+    HM = headers_main[m]
     # start plots with one subplot for each normalization
-    
+
     AX = axs[m]
-    
-    
+
+
     X = [0] # CHANGE TO 1 FOR NORMALIZAING BY TF
-    
+
     for t in X:
-                
+
         if HM == headers_main[-1]: # the last one, then plot the legend
             makeplot(data_ctrl[:,:,:], stdev[:,:,:], HM, SWNT, 0, fig, AX)
-        else:            
+        else:
             makeplot(data_ctrl[:,:,:], stdev[:,:,:], HM, SWNT, 0, fig, AX, leg='False')
-        
+
         if HM == headers_main[0]: # the first one, give y axis label
             AX.set_ylabel('RFU')
         AX.set_xlabel('Minutes')
-        
+
         AX.set_title(HM)
-        
-    
-    fig.suptitle(r'CF Emission corrected for photobleaching')               
-    
-                 
+
+
+    fig.suptitle(r'CF Emission corrected for photobleaching')
+
+
     plt.tight_layout()
-
-
-
-
-
-
-
-
