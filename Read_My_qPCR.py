@@ -29,14 +29,14 @@ To Do:
 
 #wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR"
 #fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
-wdir = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR"
-fname   = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR/2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
+wdir = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR"
+fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2021-10-07 CF-LUV Overnight -  Quantification Amplification Results_FAM.csv"
 
-fname_h = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P80/qPCR/2021-09-30_CF_quenching_and_photobleaching_controls -  Headers.csv"
+fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2021-10-07 CF-LUV Overnight -  Headers.csv"
 
 AverageDatainTriplicates = True
 
-t_per_run = 1 # minutes
+t_per_run = 2 # minutes
 
 fluor_name = ['FAM', 'Texas Red', 'Cal Gold 540']
 
@@ -622,7 +622,7 @@ for i in fluor_index:
 
 #%%
 
-# PLOT 8 - PHOTOBLEACH CORRECTED DATAT
+# PLOT 8 - PHOTOBLEACH CORRECTED DATA
 
 # ONE FIGURE FOR EACH 'HEADER_MAIN' CATEGORY
 
@@ -767,3 +767,64 @@ for m in np.arange(0,len(headers_main)): # for each figure
 
 
     plt.tight_layout()
+
+#%%
+
+# PLOT 12 - ALL DATA
+
+# ONE SUBFIGURE FOR EACH OF 'RAW', 'NORM', 'NORM+CORRBLEACH'
+
+# ONE COLOR FOR EACH TYPE OF 'HEPES','CF','CF-LUV'
+
+# plot all data on one graph with 4 different colors for base concentrations
+fig, axs = plt.subplots(1,3)
+fig.set_size_inches(12, 4)
+
+for m in np.arange(0,len(headers_main)): # for each concentration
+
+    HM = headers_main[m]
+
+    # loop through list of adds
+        # for each of adds values, create a mask on the data for [main, adds[i]]
+            # plot this one line
+
+    h_index = np.arange(0,np.shape(data)[1])
+
+    colors = [plt.cm.viridis(x) for x in np.linspace(0, 1, len(headers_main))]
+
+    for i in np.arange(0,len(headers_adds)):
+        ai = headers_adds[i]
+        # mask against both main and adds conditions
+        mask = (headers[:,0] == HM) & (headers[:,1] == ai)
+
+        # stop loop if mask is empty
+        if sum(mask) == 0:
+            break
+
+        # extract header_indices to plot from headers[mask][2]
+        plot_index = int(headers[mask][0][2])
+
+        # plot
+        dd = [data, data_norm[:,:,:,0], data_norm_ctrl[:,:,:,0]]
+        
+        for d_index in np.arange(0,len(dd)):
+            d_index = int(d_index)
+            mydata = dd[d_index]
+            AX = axs[d_index]            
+            
+            # only label the first data point
+            if i == 1:
+                AX.plot(Time,mydata[:,plot_index,0], color=colors[m], label = HM)
+            else:
+                AX.plot(Time,mydata[:,plot_index,0], color=colors[m])
+
+        AX.set_xlabel('Minutes')
+        AX.set_ylabel('RFU')
+    AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+
+axs[0].set_title(r'CF Emission')
+axs[1].set_title(r'CF Emission normalized to $t_0$')
+axs[2].set_title(r'CF Emission normalized to $t_0$' + ' \n and corrected for photobleaching')
+
+plt.tight_layout()
+plt.show()
