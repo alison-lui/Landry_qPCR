@@ -27,12 +27,19 @@ To Do:
 
 """ Start by changing the following parameters """
 
-#wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR"
-#fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P80\qPCR\2021-09-30_CF_quenching_and_photobleaching_controls -  Quantification Amplification Results_FAM.csv"
+# This is the experiment I actually want to analyze
+# The problem is that the control sample is messed up (CF-LUV + HEPES)
+# It was contaminated with Triton X-100, and the LUV's are ruptured
 wdir = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR"
 fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2021-10-07 CF-LUV Overnight -  Quantification Amplification Results_FAM.csv"
-
 fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2021-10-07 CF-LUV Overnight -  Headers.csv"
+
+# This is the previous set of experiments I did
+# Load this data, but then take only the 'CF-LUV + HEPES' data and use it
+# to repalce the first set of data where the control experiment was.
+fname2 = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2012-09-23 CF-LUV Overnight -  Quantification Amplification Results_FAM.csv"
+fname_h2 = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P84\qPCR\2012-09-23 CF-LUV Overnight -  Headers.csv"
+
 
 AverageDatainTriplicates = True
 
@@ -56,11 +63,6 @@ import os
 
 # Colors
 
-def colorFader(c1,c2,mix=0): #fade (linear interpolate) from color c1 (at mix=0) to c2 (mix=1)
-    c1=np.array(mpl.colors.to_rgb(c1))
-    c2=np.array(mpl.colors.to_rgb(c2))
-    return mpl.colors.to_hex((1-mix)*c1 + mix*c2)
-
 c_FAM = '#2E8B57' #seafoam green
 c_TxR = '#A40000' #dark red
 c_Cal = '#EDC812' #gold
@@ -69,7 +71,112 @@ c_blk = '#000000' #black
 
 fluor_colors = [c_FAM, c_TxR, c_Cal]
 
+#####################################################
+
+
+            
+            
+
 # Get Data
+
+def getdata(wdir,fname,fname_h):
+    
+    os.chdir(wdir)
+    
+    # extract emission data
+    base = fname[:-7]
+    df = pd.read_csv(fname)
+    data = df.to_numpy()
+    H,N = np.shape(data)
+    
+    # list fluorophores
+    fluor = [fluor_FAM, fluor_TexasRed, fluor_CalGold]
+    N_fluor = sum(1 for x in fluor if x == True)
+    # remove any unused fluorophores in name list
+    fluor_index = []
+    for x in range(0,len(fluor)):
+        if fluor[x] == True:
+            fluor_index = np.append(fluor_index, x)
+    
+    # put fluorophore data into empty emission data array
+    data = np.empty((H,N,N_fluor))
+    for x in range(0,N_fluor):
+        i = int(fluor_index[x])
+        temp = pd.read_csv(base + fluor_name[i] + ".csv")
+        temp = temp.to_numpy()
+        data[:,:,x] = temp
+    
+    # extract header data
+    dfh = pd.read_csv(fname_h)
+    headers = dfh.to_numpy()
+    headers = headers[0]
+    
+    # X data (cycle no.) sits in 2nd column
+    cycle = data[:,1,:] - 1 # minus one because cycle starts at 1 whereas time starts at 0
+    cycle = cycle[:,0]
+    Time = cycle * t_per_run
+        
+    # Emission data sits in 3rd and later columns
+    data = data[:,2:,:]
+    H,N,N_fluor = np.shape(data)
+    t = N
+    
+    if AverageDatainTriplicates == True:
+        # average in triplicates
+        t = int(N/3)
+        # data goes here
+        temp_avg = np.empty((H,t,N_fluor))
+        temp_std = np.empty((H,t,N_fluor))
+        temp_hdr = [] # append strings to an empty array rather than pre-generate an empty array
+    
+        for i in fluor_index:
+            i = int(i)
+            for x in range(0,t):
+                r = int(x*3)
+                temp_avg[:,x,i] = np.mean(data[:,r:r+3,i],1)
+                temp_std[:,x,i] = np.std( data[:,r:r+3,i],1)
+    
+        for x in range(0,t):
+            r = int(x*3)
+            temp_hdr = np.append(temp_hdr, headers[r]) # only take the header from the first of the triplicates
+    
+        # rename variables
+        data = temp_avg
+        stdev = temp_std
+        headers = temp_hdr
+        
+            
+    # Header Formatting
+    
+    # split each header by delimeter '-'
+    headers = [i.split(" - ") for i in headers]
+    header_index = np.arange(0,len(headers))
+    
+    # only blank headers don't have additives and are length 1. Add a 'blank' tag to these to make them all the same length
+    for i in np.arange(0,len(headers)):
+        if len(headers[i]) == 1:
+            headers[i] = [headers[i][0], 'blank']
+    
+    # bring together all split headers and add index number into one array like: [main, additive, index]
+    temp = []
+    for i in np.arange(0,len(headers)):
+        temp = np.append(temp, headers[i])
+        temp = np.append(temp, header_index[i])
+    temp = np.reshape(temp, (len(header_index),3))
+    
+    # remove any headers that say 'blank'
+    #for i in reversed(np.arange(0,len(headers))):
+    #    if temp[i,1] == 'blank':
+    #        temp = np.delete(temp, i, 0)
+    
+    # place new data into headers with blanks removed
+    headers = temp
+    
+    # identify unique mains and additives in list
+    headers_main = list(set(headers[:,0]))
+    headers_adds = list(set(headers[:,1]))
+    
+    return data, stdev, headers, headers_main, headers_adds, Time
 
 os.chdir(wdir)
 
@@ -105,7 +212,7 @@ headers = headers[0]
 cycle = data[:,1,:] - 1 # minus one because cycle starts at 1 whereas time starts at 0
 cycle = cycle[:,0]
 Time = cycle * t_per_run
-
+    
 # Emission data sits in 3rd and later columns
 data = data[:,2:,:]
 H,N,N_fluor = np.shape(data)
@@ -134,7 +241,37 @@ if AverageDatainTriplicates == True:
     data = temp_avg
     stdev = temp_std
     headers = temp_hdr
+    
+        
+# Header Formatting
 
+# split each header by delimeter '-'
+headers = [i.split(" - ") for i in headers]
+header_index = np.arange(0,len(headers))
+
+# only blank headers don't have additives and are length 1. Add a 'blank' tag to these to make them all the same length
+for i in np.arange(0,len(headers)):
+    if len(headers[i]) == 1:
+        headers[i] = [headers[i][0], 'blank']
+
+# bring together all split headers and add index number into one array like: [main, additive, index]
+temp = []
+for i in np.arange(0,len(headers)):
+    temp = np.append(temp, headers[i])
+    temp = np.append(temp, header_index[i])
+temp = np.reshape(temp, (len(header_index),3))
+
+# remove any headers that say 'blank'
+#for i in reversed(np.arange(0,len(headers))):
+#    if temp[i,1] == 'blank':
+#        temp = np.delete(temp, i, 0)
+
+# place new data into headers with blanks removed
+headers = temp
+
+# identify unique mains and additives in list
+headers_main = list(set(headers[:,0]))
+headers_adds = list(set(headers[:,1]))
 
 #####################################################
 
@@ -188,41 +325,33 @@ def makeplot(data, stdev, main, adds, fi, FIG, AX, colors = 0, labels='adds', le
         #AX.errorbar(Time,, , color=colors[i], label = ai)
     if leg == True:
         AX.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+        
+    
 
     return
 
 #####################################################
 
-# Header Formatting
+# Extract the two sets of data and average by triplicates for all
 
-# split each header by delimeter '-'
-headers = [i.split(" - ") for i in headers]
-header_index = np.arange(0,len(headers))
+data,  stdev,  headers,  headers_main,  headers_adds, Time  = getdata(wdir, fname,  fname_h)
+data2, stdev2, headers2, headers_main2, headers_adds2 = getdata(wdir, fname2, fname_h2)
 
-# only blank headers don't have additives and are length 1. Add a 'blank' tag to these to make them all the same length
-for i in np.arange(0,len(headers)):
-    if len(headers[i]) == 1:
-        headers[i] = [headers[i][0], 'blank']
+# Find the column of data in data1 that needs to be removed
+mask1 = (headers[:,0] == 'CF-LUV') & (headers[:,1] == 'HEPES')
+data1_index = int(headers[mask1][:][0][2])
 
-# bring together all split headers and add index number into one array like: [main, additive, index]
-temp = []
-for i in np.arange(0,len(headers)):
-    temp = np.append(temp, headers[i])
-    temp = np.append(temp, header_index[i])
-temp = np.reshape(temp, (len(header_index),3))
+# Find the column of data in data2 and stdev2 that match main = CF-LUV, adds = HEPES
+mask2 = (headers2[:,0] == 'CF-LUV') & (headers2[:,1] == 'HEPES')
+data2_index = int(headers2[mask2][:][0][2]) # this is the column # in data2 that needs to be imported
 
-# remove any headers that say 'blank'
-#for i in reversed(np.arange(0,len(headers))):
-#    if temp[i,1] == 'blank':
-#        temp = np.delete(temp, i, 0)
+# replace data[data1_index] with data2[data2_index] and stdev..
+data[data1_index]  = data2[data2_index]
+stdev[data1_index] = stdev2[data2_index]
 
-# place new data into headers with blanks removed
-headers = temp
-
-# identify unique mains and additives in list
-headers_main = list(set(headers[:,0]))
-headers_adds = list(set(headers[:,1]))
-
+# Save new data as data.csv
+np.savetxt('data.csv', data, delimiter=',')
+np.savetxt('stdev.csv', stdev, delimiter=',')
 
 #####################################################
 
