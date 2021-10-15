@@ -27,8 +27,8 @@ To Do:
 
 """ Start by changing the following parameters """
 
-wdir    = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR"
-fname   = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2012-09-14 CF-GUV Overnight -  Quantification Amplification Results_FAM.csv"
+wdir    = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P92\qPCR"
+fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P92\qPCR\2021-10-12_CF-LUV_overnight -  Quantification Amplification Results_FAM.csv"
 
 fname_h = r"C:\Users\Alison\Documents\AL Data\B2P61\qPCR\2012-09-14 CF-GUV Overnight -  Headers.csv"
 
