@@ -27,9 +27,17 @@ To Do:
 
 """ Start by changing the following parameters """
 
-wdir = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P92\qPCR"
-fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P92\qPCR\2021-10-12_CF-LUV_overnight -  Quantification Amplification Results_FAM.csv"
-fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P92\qPCR\2021-10-12_CF-LUV_overnight -  Headers.csv"
+#wdir = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P92\qPCR"
+#fname   = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P92\qPCR\2021-10-12_CF-LUV_overnight -  Quantification Amplification Results_FAM.csv"
+#fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P92\qPCR\2021-10-12_CF-LUV_overnight -  Headers.csv"
+
+wdir = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P92/qPCR"
+fname = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P92/qPCR/2021-10-12_CF-LUV_overnight -  Quantification Amplification Results_FAM.csv"
+fname_h = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P92/qPCR/2021-10-12_CF-LUV_overnight -  Headers.csv"
+
+wdir = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P76/qPCR"
+fname = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P76/qPCR/2012-09-23 CF-LUV Overnight -  Quantification Amplification Results_FAM.csv"
+fname_h = r"/Volumes/GoogleDrive/My Drive/Research/Landry Lab Summer Research 2021/AL Data/B2P76/qPCR/2012-09-23 CF-LUV Overnight -  Headers.csv"
 
 AverageDatainTriplicates = True
 
@@ -690,7 +698,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
 
 # ONE SUBFIGURE FOR EACH 'HEADERS_MAIN' CATEGORY
 
-fig, axs = plt.subplots(1,4)
+fig, axs = plt.subplots(1,3)
 fig.set_size_inches(14, 6)
 
 for m in np.arange(0,len(headers_main)): # for each figure
@@ -715,7 +723,7 @@ for m in np.arange(0,len(headers_main)): # for each figure
         AX.set_xlabel('Minutes')
 
         AX.set_title(HM)
-        AX.set_ylim([0.93,1.06])
+        AX.set_ylim([0.4,1.3])
     if t == 0:
         fig.suptitle(r'CF Emission normalized to $t_0$ and corrected for photobleaching')
     elif t == 1:
