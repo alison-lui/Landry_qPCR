@@ -15,6 +15,8 @@ qPCR timecourse of each well, and plots the following:
         stays about the same.
 
     if only one fluorophore is selected, graph 2 is not created.
+    
+This file, ready to commit to main.
 
 """
 
