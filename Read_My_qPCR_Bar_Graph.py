@@ -21,39 +21,44 @@ This file, ready to commit to main.
 """
 
 # Header Filename
-fname_h = r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR\2021-09-22 CF-LUV from 2019-09-14 and 2019-09-19 -  Headers.csv"
+fname_h = r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P95\qPCR\2021-10-28_CF_dilutions -  Headers.csv"
 
 # Data filenames
-fnames = [r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR\2021-09-22 CF-LUV from 2019-09-14 and 2019-09-19 -  Quantification Amplification Results_FAM.csv"]
+fnames = [r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P95\qPCR\2021-10-28_CF_dilutions -  Quantification Amplification Results_FAM.csv"]
 
 # Data working directories
-wdirs =  [r"C:\Users\Alison\Documents\AL Data\B2P70\qPCR"]
+wdirs =  [r"G:\My Drive\Research\Landry Lab Summer Research 2021\AL Data\B2P95\qPCR"]
 
 
 fluor_FAM = True
-fluor_TexasRed = True
+fluor_TexasRed = False
 fluor_CalGold = False
+
+useLatex = False
 
 #######################################
 
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
-mpl.rcParams['text.usetex'] = True
 import matplotlib.pyplot as plt
 import os
 import sys
+from sklearn.metrics import r2_score
  
 #######################################  
+# use LaTeX ?
 
-# use LaTeX fonts in the plot
-plt.rcParams.update({
-    "text.usetex": True,
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica"]})
-
-plt.rc('text', usetex=True)
-plt.rc('font', family='serif')
+if useLatex == True:
+    # use LaTeX fonts in the plot
+    mpl.rcParams['text.usetex'] = True
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Helvetica"]})
+    
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
 
 #######################################  
 
@@ -199,7 +204,52 @@ if len(fnames) == 1:
 
 
 ###############################################
+
 #%% FIGURE 3
+
+# Calculate ratio of CF to DF
+
+DF = [1,0.8,0.6,0.4,0.2,0.1,0,0,0,0,0,0,0]
+
+# subtract the average of the zero values 
+zeroaverage = np.mean(bar_composite[-7:])
+barsubtracted = bar_composite - zeroaverage
+barsubtracted = barsubtracted.flatten()
+
+# fit all
+xdatafull = DF[0:7]
+ydatafull = barsubtracted[0:7]
+fit = np.polyfit(xdatafull, ydatafull, deg=1, full=False)
+yfitfull = [x * fit[0] + fit[1] for x in xdatafull]
+
+# make a line using the first 5 points
+xdata = DF[2:7]
+ydata = barsubtracted[2:7]
+fit = np.polyfit(xdata, ydata, deg=1, full=False)
+yfit = [x * fit[0] + fit[1] for x in xdata]
+rr = r2_score(ydata, yfit)
+
+
+fig,ax = plt.subplots()
+
+ax.scatter(DF,bar_composite, color='b')
+#ax.plot(xdatafull,yfitfull, color='b')
+ax.scatter(DF,barsubtracted, color='k')
+ax.plot(xdata,yfit, color='k')
+
+ax.set_xlabel('Dilution Factor')
+ax.set_ylabel('RFU')
+stringlabel = [r"$R^2$ = " + str(np.round(rr,decimals=3)) 
+                + '\n y = ' + str(np.round(fit[0],decimals=0)) 
+                + '*x + ' + str(np.round(fit[1],decimals=3))]
+ax.annotate(stringlabel[0], xy=(np.mean(DF)*1.5,np.mean(ydata)))
+
+fig.tight_layout()
+
+plt.show()
+    
+
+#%% FIGURE 4
 
 
 if N_fluor == 1:
@@ -240,10 +290,6 @@ ax.set_ylabel('FAM / Texas Red Fluorescence')
 plt.tight_layout()
 
         
-    
-    
-    
-    
     
     
     
